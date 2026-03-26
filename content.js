@@ -81,13 +81,21 @@
 
     // Extract and inject text content
     const texts = extractTextContent();
+    console.log('[WorkMode] createOverlay: texts.length =', texts.length);
     if (texts.length > 0) {
-      texts.forEach(text => {
+      console.log('[WorkMode] First paragraph:', texts[0]?.substring(0, 50));
+      texts.forEach((text, index) => {
         const p = document.createElement('p');
         p.textContent = text;
         content.appendChild(p);
+        if (index === 0) {
+          console.log('[WorkMode] First paragraph element:', p);
+          console.log('[WorkMode] First paragraph textContent:', p.textContent);
+        }
       });
+      console.log('[WorkMode] Content children count:', content.children.length);
     } else {
+      console.log('[WorkMode] No texts found, showing empty message');
       const empty = document.createElement('div');
       empty.id = 'wps-empty';
       empty.textContent = '无法提取页面内容';
@@ -100,6 +108,20 @@
 
     // Add to page
     document.body.appendChild(overlay);
+    console.log('[WorkMode] Overlay added to page');
+    console.log('[WorkMode] Overlay element:', overlay);
+    console.log('[WorkMode] Overlay classes:', overlay.className);
+    console.log('[WorkMode] Overlay display:', window.getComputedStyle(overlay).display);
+
+    // Check what's actually in the content
+    setTimeout(() => {
+      const wpsContent = document.getElementById('wps-content');
+      const wpsEmpty = document.getElementById('wps-empty');
+      console.log('[WorkMode] #wps-content children:', wpsContent?.children.length);
+      console.log('[WorkMode] #wps-empty exists:', !!wpsEmpty);
+      console.log('[WorkMode] #wps-paper display:', window.getComputedStyle(document.getElementById('wps-paper')).display);
+      console.log('[WorkMode] #wps-content display:', window.getComputedStyle(wpsContent).display);
+    }, 100);
   }
 
   // Remove the WPS overlay
@@ -112,44 +134,51 @@
 
   // Extract text content from current page
   function extractTextContent() {
-    // Common cookie/popup/notice selectors to exclude
+    // Selectors for elements to exclude
     const excludeSelectors = [
-      '[id*="cookie"]', '[class*="cookie"]',
-      '[id*="popup"]', '[class*="popup"]',
-      '[id*="modal"]', '[class*="modal"]',
-      '[id*="notice"]', '[class*="notice"]',
-      '[id*="banner"]', '[class*="banner"]',
-      '[id*="dialog"]', '[class*="dialog"]',
-      '[id*="consent"]', '[class*="consent"]',
-      '[id*="privacy"]', '[class*="privacy"]',
-      '[id*="footer"]', '[class*="footer"]',
-      '[id*="header"]', '[class*="header"]',
-      '[id*="nav"]', '[class*="nav"]',
-      '[id*="sidebar"]', '[class*="sidebar"]',
-      '[id*="ad"]', '[class*="ad"]'
+      'footer', 'header', 'nav', 'aside',
+      '[id="footer"]', '[class*="footer"]',
+      '[id="header"]', '[class*="header"]',
+      '[id="nav"]', '[class*="nav"]',
+      '[id="sidebar"]', '[class*="sidebar"]',
+      '[id="cookie"]', '[class*="cookie"]',
+      '[id="popup"]', '[class*="popup"]',
+      '[id="modal"]', '[class*="modal"]',
+      '[id="consent"]', '[class*="consent"]',
+      '[id="notice"]', '[class*="notice"]',
+      '[id="dialog"]', '[class*="dialog"]',
+      '[id="ad"]', '[class*="ad"]',
+      '[id="advertisement"]', '[class*="advertisement"]'
     ];
 
     // Keywords to exclude
     const excludeKeywords = [
-      'cookie', ' Cookie', 'cookie ',
-      '隐私', '隐私政策', '隐私声明',
-      '点击关闭', '点击接受', '同意',
-      '本网站使用', '网站运行离不开',
-      '继续浏览', '继续使用',
-      '关闭', 'accept', 'Accept'
+      'cookie',
+      '隐私政策',
+      '隐私声明',
+      '网站运行离不开',
+      '点击接受',
+      '点击关闭',
+      'copyright',
+      '©',
+      'all rights reserved'
     ];
 
     // Helper: check if element or any parent matches exclude selectors
     function isExcluded(element) {
       let current = element;
-      while (current && current !== document.body) {
-        // Check selector matches
+      let depth = 0;
+      while (current && current !== document.body && depth < 8) {
+        // Check if element matches any exclude selector
         for (const selector of excludeSelectors) {
-          if (current.matches && current.matches(selector)) {
-            return true;
-          }
+          try {
+            if (current.matches && current.matches(selector)) {
+              return true;
+            }
+          } catch (e) {}
         }
         current = current.parentElement;
+        depth++;
       }
       return false;
     }
@@ -162,36 +191,20 @@
       );
     }
 
-    // Get paragraphs from main content areas first
-    const mainContentSelectors = [
-      'article p',
-      'main p',
-      '[role="main"] p',
-      '.content p',
-      '.post-content p',
-      '.article-content p',
-      '.entry-content p',
-      '#content p',
-      'p'
-    ];
+    // Get all paragraphs first
+    const allParagraphs = Array.from(document.querySelectorAll('p'));
 
-    const allParagraphs = [];
-    for (const selector of mainContentSelectors) {
-      const elements = document.querySelectorAll(selector);
-      allParagraphs.push(...Array.from(elements));
-    }
+    console.log('[WorkMode] Found', allParagraphs.length, 'paragraphs total');
 
-    // Deduplicate and filter
-    const seen = new Set();
+    // Filter
     const texts = [];
 
     for (const p of allParagraphs) {
-      // Skip if already processed
-      if (seen.has(p)) continue;
-      seen.add(p);
-
       // Skip if excluded by selector
-      if (isExcluded(p)) continue;
+      if (isExcluded(p)) {
+        console.log('[WorkMode] Skipped (in excluded element)');
+        continue;
+      }
 
       const text = p.textContent.trim();
 
@@ -199,12 +212,15 @@
       if (text.length < 15) continue;
 
       // Skip if contains exclude keywords
-      if (hasExcludeKeyword(text)) continue;
+      if (hasExcludeKeyword(text)) {
+        console.log('[WorkMode] Skipped (has keyword):', text.substring(0, 30));
+        continue;
+      }
 
       texts.push(text);
 
       // Limit to avoid overwhelming content
-      if (texts.length >= 50) break;
+      if (texts.length >= 30) break;
     }
 
     console.log('[WorkMode] Extracted', texts.length, 'paragraphs');
