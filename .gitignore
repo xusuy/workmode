@@ -1,0 +1,10 @@
+# Worktrees
+.worktrees/
+worktrees/
+
+# Node modules (if needed later)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
