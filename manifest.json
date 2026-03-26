@@ -3,11 +3,6 @@
   "name": "WorkMode",
   "version": "1.0.0",
   "description": "在公共场合伪装成 WPS 工作的浏览器扩展",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
