@@ -137,31 +137,51 @@
     // Selectors for elements to exclude
     const excludeSelectors = [
       'footer', 'header', 'nav', 'aside',
-      '[id="footer"]', '[class*="footer"]',
-      '[id="header"]', '[class*="header"]',
-      '[id="nav"]', '[class*="nav"]',
-      '[id="sidebar"]', '[class*="sidebar"]',
-      '[id="cookie"]', '[class*="cookie"]',
-      '[id="popup"]', '[class*="popup"]',
-      '[id="modal"]', '[class*="modal"]',
-      '[id="consent"]', '[class*="consent"]',
-      '[id="notice"]', '[class*="notice"]',
-      '[id="dialog"]', '[class*="dialog"]',
-      '[id="ad"]', '[class*="ad"]',
-      '[id="advertisement"]', '[class*="advertisement"]'
+      '[id*="footer"]', '[class*="footer"]',
+      '[id*="header"]', '[class*="header"]',
+      '[id*="nav"]', '[class*="nav"]',
+      '[id*="sidebar"]', '[class*="sidebar"]',
+      '[id*="cookie"]', '[class*="cookie"]',
+      '[id*="popup"]', '[class*="popup"]',
+      '[id*="modal"]', '[class*="modal"]',
+      '[id*="consent"]', '[class*="consent"]',
+      '[id*="notice"]', '[class*="notice"]',
+      '[id*="dialog"]', '[class*="dialog"]',
+      '[id*="ad"]', '[class*="ad"]',
+      '[id*="advertisement"]', '[class*="advertisement"]',
+      '[id*="privacy"]', '[class*="privacy"]',
+      '[id*="policy"]', '[class*="policy"]',
+      '[id*="terms"]', '[class*="terms"]',
+      '[id*="legal"]', '[class*="legal"]',
+      '[id*="disclaimer"]', '[class*="disclaimer"]'
     ];
 
-    // Keywords to exclude
+    // Keywords to exclude (more comprehensive)
     const excludeKeywords = [
       'cookie',
       '隐私政策',
       '隐私声明',
+      '服务条款',
       '网站运行离不开',
       '点击接受',
       '点击关闭',
       'copyright',
       '©',
-      'all rights reserved'
+      'all rights reserved',
+      '在该服务上向您展示',
+      '基于有限的数据',
+      '非精确位置',
+      '设备类型',
+      '与之互动',
+      '限制向您展示',
+      '个性化',
+      '内容设置',
+      '拒绝所有',
+      '接受所有',
+      '必要 Cookie',
+      '目标 Cookie',
+      '统计数据 Cookie',
+      '体验 Cookie'
     ];
 
     // Helper: check if element or any parent matches exclude selectors
@@ -191,8 +211,35 @@
       );
     }
 
-    // Get all paragraphs first
-    const allParagraphs = Array.from(document.querySelectorAll('p'));
+    // Priority-based extraction: try main content areas first
+    const contentAreaSelectors = [
+      'article',
+      'main',
+      '[role="main"]',
+      '.article-content',
+      '.post-content',
+      '.entry-content',
+      '.content',
+      '#content',
+      '#article',
+      '#main'
+    ];
+
+    // First, try to find paragraphs in main content areas
+    const mainParagraphs = [];
+    for (const selector of contentAreaSelectors) {
+      const areas = document.querySelectorAll(selector);
+      for (const area of areas) {
+        const paragraphs = area.querySelectorAll('p');
+        mainParagraphs.push(...Array.from(paragraphs));
+      }
+      if (mainParagraphs.length >= 10) break; // Found enough content
+    }
+
+    // If not enough in main areas, fall back to all paragraphs
+    const allParagraphs = mainParagraphs.length > 0
+      ? mainParagraphs
+      : Array.from(document.querySelectorAll('p'));
 
     console.log('[WorkMode] Found', allParagraphs.length, 'paragraphs total');
 
@@ -202,7 +249,6 @@
     for (const p of allParagraphs) {
       // Skip if excluded by selector
       if (isExcluded(p)) {
-        console.log('[WorkMode] Skipped (in excluded element)');
         continue;
       }
 
@@ -217,10 +263,16 @@
         continue;
       }
 
+      // Additional quality check: skip if starts with common policy phrases
+      if (/^(本网站|我们使用|cookie|点击|接受|关闭|拒绝)/i.test(text)) {
+        console.log('[WorkMode] Skipped (policy text):', text.substring(0, 30));
+        continue;
+      }
+
       texts.push(text);
 
       // Limit to avoid overwhelming content
-      if (texts.length >= 30) break;
+      if (texts.length >= 50) break;
     }
 
     console.log('[WorkMode] Extracted', texts.length, 'paragraphs');
