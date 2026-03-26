@@ -1,5 +1,5 @@
 // WorkMode Content Script
-// Press Shift+Esc to toggle WPS camouflage mode
+// Press Alt+W to toggle WPS camouflage mode
 
 (function() {
   'use strict';
@@ -10,7 +10,7 @@
 
   // Keyboard shortcut handler
   document.addEventListener('keydown', function(e) {
-    if (e.shiftKey && e.code === 'Escape') {
+    if (e.altKey && e.code === 'KeyW') {
       e.preventDefault();
       toggleWorkMode();
     }
