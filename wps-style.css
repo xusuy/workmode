@@ -1,0 +1,90 @@
+/* WorkMode Overlay Styles */
+
+/* Full screen overlay container */
+#wps-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #F5F5F5;
+  z-index: 2147483647;
+  display: none;
+  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+}
+
+/* Top toolbar - WPS blue */
+#wps-toolbar {
+  background-color: #2B579A;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* WPS Logo area */
+#wps-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  margin-right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Menu items */
+#wps-menu {
+  display: flex;
+  gap: 4px;
+}
+
+.wps-menu-item {
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: default;
+  border-radius: 2px;
+  transition: background-color 0.15s;
+}
+
+.wps-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* A4 paper container */
+#wps-paper {
+  width: 210mm;
+  min-height: 297mm;
+  background-color: #FFFFFF;
+  margin: 30px auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+/* Paper content styling */
+#wps-content {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333333;
+}
+
+#wps-content p {
+  margin: 0 0 0.5em 0;
+  text-align: justify;
+}
+
+/* Empty state message */
+#wps-empty {
+  text-align: center;
+  color: #999999;
+  padding: 60px 20px;
+  font-size: 14px;
+}
+
+/* Active state - show overlay */
+#wps-overlay.active {
+  display: block;
+}
