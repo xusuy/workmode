@@ -193,7 +193,17 @@
         for (const selector of excludeSelectors) {
           try {
             if (current.matches && current.matches(selector)) {
-              return true;
+              // Only exclude exact matches for footer/header/nav
+              const tagName = current.tagName.toLowerCase();
+              const id = current.id || '';
+              const className = current.className || '';
+
+              // Only exclude if it's actually a footer/header/nav element
+              if (tagName === 'footer' || tagName === 'header' || tagName === 'nav' || tagName === 'aside' ||
+                  id === 'footer' || id === 'header' || id === 'nav' ||
+                  className === 'footer' || className === 'header' || className === 'nav') {
+                return true;
+              }
             }
           } catch (e) {}
         }
