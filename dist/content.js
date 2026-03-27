@@ -89,23 +89,42 @@
     const content = document.createElement('div');
     content.id = 'wps-content';
 
-    // Extract and inject text content
-    const texts = extractTextContent();
-    console.log('[WorkMode] createOverlay: texts.length =', texts.length);
-    if (texts.length > 0) {
-      console.log('[WorkMode] First paragraph:', texts[0]?.substring(0, 50));
-      texts.forEach((text, index) => {
-        const p = document.createElement('p');
-        p.textContent = text;
-        content.appendChild(p);
+    // Get chapter info
+    const chapterInfo = getChapterInfo();
+
+    // Extract and inject content (elements for font preservation)
+    const elements = extractTextContent();
+    console.log('[WorkMode] createOverlay: elements.length =', elements.length);
+
+    if (elements.length > 0) {
+      // Add chapter title at the top of paper content
+      if (chapterInfo.title) {
+        const chapterTitle = document.createElement('div');
+        chapterTitle.style.cssText = 'font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; color: #333;';
+        chapterTitle.textContent = chapterInfo.title;
+        content.appendChild(chapterTitle);
+        console.log('[WorkMode] 添加章节标题:', chapterInfo.title);
+      }
+
+      // Clone elements to preserve fonts
+      elements.forEach((el, index) => {
+        const cloned = el.cloneNode(true);
+        // Preserve computed styles for special fonts
+        const computedStyle = window.getComputedStyle(el);
+        cloned.style.fontFamily = computedStyle.fontFamily;
+        cloned.style.fontSize = computedStyle.fontSize;
+        cloned.style.fontWeight = computedStyle.fontWeight;
+        cloned.style.lineHeight = computedStyle.lineHeight;
+        cloned.style.color = computedStyle.color;
+        content.appendChild(cloned);
         if (index === 0) {
-          console.log('[WorkMode] First paragraph element:', p);
-          console.log('[WorkMode] First paragraph textContent:', p.textContent);
+          console.log('[WorkMode] First element:', cloned);
+          console.log('[WorkMode] First element textContent:', cloned.textContent?.substring(0, 50));
         }
       });
       console.log('[WorkMode] Content children count:', content.children.length);
     } else {
-      console.log('[WorkMode] No texts found, showing empty message');
+      console.log('[WorkMode] No content found, showing empty message');
       const empty = document.createElement('div');
       empty.id = 'wps-empty';
       empty.textContent = '无法提取页面内容';
@@ -142,94 +161,50 @@
     }
   }
 
-  // Extract text content from current page
+  // Extract text content from current page - returns HTML elements for font preservation
   function extractTextContent() {
-    // Selectors for elements to exclude
-    const excludeSelectors = [
-      'footer', 'header', 'nav', 'aside',
-      '[id*="footer"]', '[class*="footer"]',
-      '[id*="header"]', '[class*="header"]',
-      '[id*="nav"]', '[class*="nav"]',
-      '[id*="sidebar"]', '[class*="sidebar"]',
-      '[id*="cookie"]', '[class*="cookie"]',
-      '[id*="popup"]', '[class*="popup"]',
-      '[id*="modal"]', '[class*="modal"]',
-      '[id*="consent"]', '[class*="consent"]',
-      '[id*="notice"]', '[class*="notice"]',
-      '[id*="dialog"]', '[class*="dialog"]',
-      '[id*="ad"]', '[class*="ad"]',
-      '[id*="advertisement"]', '[class*="advertisement"]',
-      '[id*="privacy"]', '[class*="privacy"]',
-      '[id*="policy"]', '[class*="policy"]',
-      '[id*="terms"]', '[class*="terms"]',
-      '[id*="legal"]', '[class*="legal"]',
-      '[id*="disclaimer"]', '[class*="disclaimer"]'
-    ];
+    // 排除关键词
+    const excludeKeywords = ['cookie', '隐私政策', '服务条款', 'copyright', '©', '点击接受'];
 
-    // Keywords to exclude (more comprehensive)
-    const excludeKeywords = [
-      'cookie',
-      '隐私政策',
-      '隐私声明',
-      '服务条款',
-      '网站运行离不开',
-      '点击接受',
-      '点击关闭',
-      'copyright',
-      '©',
-      'all rights reserved',
-      '在该服务上向您展示',
-      '基于有限的数据',
-      '非精确位置',
-      '设备类型',
-      '与之互动',
-      '限制向您展示',
-      '个性化',
-      '内容设置',
-      '拒绝所有',
-      '接受所有',
-      '必要 Cookie',
-      '目标 Cookie',
-      '统计数据 Cookie',
-      '体验 Cookie'
-    ];
-
-    // Helper: check if element or any parent matches exclude selectors
-    function isExcluded(element) {
-      let current = element;
-      let depth = 0;
-      while (current && current !== document.body && depth < 8) {
-        // Check if element matches any exclude selector
-        for (const selector of excludeSelectors) {
-          try {
-            if (current.matches && current.matches(selector)) {
-              // Only exclude exact matches for footer/header/nav
-              const tagName = current.tagName.toLowerCase();
-              const id = current.id || '';
-              const className = current.className || '';
-
-              // Only exclude if it's actually a footer/header/nav element
-              if (tagName === 'footer' || tagName === 'header' || tagName === 'nav' || tagName === 'aside' ||
-                  id === 'footer' || id === 'header' || id === 'nav' ||
-                  className === 'footer' || className === 'header' || className === 'nav') {
-                return true;
-              }
-            }
-          } catch (e) {}
-        }
-        current = current.parentElement;
-        depth++;
-      }
-      return false;
-    }
-
-    // Helper: check if text contains exclude keywords
     function hasExcludeKeyword(text) {
-      const lowerText = text.toLowerCase();
-      return excludeKeywords.some(keyword =>
-        lowerText.includes(keyword.toLowerCase())
-      );
+      return excludeKeywords.some(k => text.toLowerCase().includes(k.toLowerCase()));
     }
+
+    // 小说内容选择器（按优先级排序）
+    const novelSelectors = [
+      '.muye-reader-content',  // 番茄小说（最优先）
+      '.j-chapter-content',
+      '.m-reader-text',
+      '.chapter-content',
+      '.novel-content',
+      '.reader-content'
+    ];
+
+    // 优先从小说容器提取
+    for (const selector of novelSelectors) {
+      const container = document.querySelector(selector);
+      if (container) {
+        console.log('[WorkMode] 找到容器:', selector);
+
+        // 获取容器内所有p标签
+        const allPTags = container.querySelectorAll('p');
+
+        console.log('[WorkMode] 容器内p标签数:', allPTags.length);
+
+        const validParagraphs = Array.from(allPTags).filter(p => {
+          const text = p.textContent.trim();
+          return text.length >= 5 && !hasExcludeKeyword(text);
+        });
+
+        if (validParagraphs.length >= 10) {
+          console.log('[WorkMode] 提取到', validParagraphs.length, '个有效段落');
+          return validParagraphs;
+        }
+      }
+    }
+
+    // 如果没找到小说容器，使用通用方法
+    console.log('[WorkMode] 未找到小说容器，使用通用方法');
 
     // Priority-based extraction: try main content areas first
     const contentAreaSelectors = [
@@ -263,40 +238,37 @@
 
     console.log('[WorkMode] Found', allParagraphs.length, 'paragraphs total');
 
-    // Filter
-    const texts = [];
-
-    for (const p of allParagraphs) {
-      // Skip if excluded by selector
-      if (isExcluded(p)) {
-        continue;
-      }
-
+    // Filter and return elements (not text)
+    const validParagraphs = allParagraphs.filter(p => {
       const text = p.textContent.trim();
+      return text.length >= 5 && !hasExcludeKeyword(text);
+    });
 
-      // Skip if too short
-      if (text.length < 15) continue;
+    console.log('[WorkMode] Extracted', validParagraphs.length, 'paragraphs');
+    return validParagraphs;
+  }
 
-      // Skip if contains exclude keywords
-      if (hasExcludeKeyword(text)) {
-        console.log('[WorkMode] Skipped (has keyword):', text.substring(0, 30));
-        continue;
+  // Get chapter title from page
+  function getChapterInfo() {
+    const info = { title: '' };
+
+    try {
+      const bodyText = document.body.textContent;
+
+      // Try to match chapter pattern: 第X章 [标题] 本章字数
+      const chapterMatch = bodyText.match(/第(\d+)章\s*([^\n]{1,30}?)(?:\s*本章字数)/);
+
+      if (chapterMatch) {
+        info.title = '第' + chapterMatch[1] + '章 ' + chapterMatch[2].trim();
+        console.log('[WorkMode] 提取的章节信息:', info);
+      } else {
+        console.log('[WorkMode] 未找到章节标题');
       }
-
-      // Additional quality check: skip if starts with common policy phrases
-      if (/^(本网站|我们使用|cookie|点击|接受|关闭|拒绝)/i.test(text)) {
-        console.log('[WorkMode] Skipped (policy text):', text.substring(0, 30));
-        continue;
-      }
-
-      texts.push(text);
-
-      // Limit to avoid overwhelming content
-      if (texts.length >= 200) break;
+    } catch (e) {
+      console.log('[WorkMode] 提取章节信息失败:', e);
     }
 
-    console.log('[WorkMode] Extracted', texts.length, 'paragraphs');
-    return texts;
+    return info;
   }
 
 })();
