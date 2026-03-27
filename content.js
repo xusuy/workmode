@@ -272,7 +272,7 @@
       texts.push(text);
 
       // Limit to avoid overwhelming content
-      if (texts.length >= 50) break;
+      if (texts.length >= 200) break;
     }
 
     console.log('[WorkMode] Extracted', texts.length, 'paragraphs');
