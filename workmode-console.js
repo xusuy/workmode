@@ -279,7 +279,7 @@
 
           const validParagraphs = Array.from(allPTags).filter(p => {
             const text = p.textContent.trim();
-            return text.length >= 5 && !hasExcludeKeyword(text);
+            return text.length >= 1 && !hasExcludeKeyword(text);
           });
 
           if (validParagraphs.length >= 10) {
@@ -303,7 +303,7 @@
       const allPTags = document.querySelectorAll('p');
       const validParagraphs = Array.from(allPTags).filter(p => {
         const text = p.textContent.trim();
-        return text.length >= 5 && !hasExcludeKeyword(text);
+        return text.length >= 1 && !hasExcludeKeyword(text);
       });
 
       console.log(`[WorkMode] 通用方法提取到 ${validParagraphs.length} 个段落`);

@@ -193,7 +193,7 @@
 
         const validParagraphs = Array.from(allPTags).filter(p => {
           const text = p.textContent.trim();
-          return text.length >= 5 && !hasExcludeKeyword(text);
+          return text.length >= 1 && !hasExcludeKeyword(text);
         });
 
         if (validParagraphs.length >= 10) {
@@ -241,7 +241,7 @@
     // Filter and return elements (not text)
     const validParagraphs = allParagraphs.filter(p => {
       const text = p.textContent.trim();
-      return text.length >= 5 && !hasExcludeKeyword(text);
+      return text.length >= 1 && !hasExcludeKeyword(text);
     });
 
     console.log('[WorkMode] Extracted', validParagraphs.length, 'paragraphs');

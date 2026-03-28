@@ -274,8 +274,8 @@
 
       const text = p.textContent.trim();
 
-      // Skip if too short
-      if (text.length < 15) continue;
+      // Skip if too short (allow short phrases like 轰隆——)
+      if (text.length < 1) continue;
 
       // Skip if contains exclude keywords
       if (hasExcludeKeyword(text)) {
