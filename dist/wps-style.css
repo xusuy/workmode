@@ -145,3 +145,51 @@
   margin: 0 4px;
   opacity: 0.5;
 }
+
+/* 章节分隔 */
+.chapter-separator {
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+
+.chapter-title {
+  font-size: 14px;
+  font-weight: normal;
+  text-align: center;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.chapter-divider {
+  height: 1px;
+  background-color: #eee;
+  margin: 5px auto;
+  width: 60%;
+}
+
+/* 加载下一章按钮 - 隐晦样式 */
+.wps-load-next-btn {
+  display: block;
+  width: auto;
+  margin: 15px auto;
+  padding: 5px 15px;
+  background-color: transparent;
+  color: #999;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  text-align: center;
+}
+
+.wps-load-next-btn:hover {
+  background-color: #f5f5f5;
+  color: #666;
+  border-color: #ccc;
+}
+
+.wps-load-next-btn.loading {
+  opacity: 0.5;
+  cursor: wait;
+}
