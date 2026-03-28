@@ -42,6 +42,7 @@
 
     /* Top toolbar - WPS blue */
     #wps-toolbar {
+      position: relative;
       background-color: #2B579A;
       height: 48px;
       display: flex;
@@ -82,10 +83,11 @@
 
     /* 文档标题 */
     #wps-doc-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
       color: white;
       font-size: 14px;
-      margin-left: auto;
-      margin-right: 16px;
       opacity: 0.9;
     }
 
