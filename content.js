@@ -81,6 +81,12 @@
     toolbar.appendChild(logo);
     toolbar.appendChild(menu);
 
+    // 添加文档标题
+    const docTitle = document.createElement('div');
+    docTitle.id = 'wps-doc-title';
+    docTitle.textContent = '[兼容模式] 文档1.docx';
+    toolbar.appendChild(docTitle);
+
     // Create paper container
     const paper = document.createElement('div');
     paper.id = 'wps-paper';
@@ -92,12 +98,16 @@
     // Extract and inject text content
     const texts = extractTextContent();
     console.log('[WorkMode] createOverlay: texts.length =', texts.length);
+
+    // 计算字数
+    let totalWordCount = 0;
     if (texts.length > 0) {
       console.log('[WorkMode] First paragraph:', texts[0]?.substring(0, 50));
       texts.forEach((text, index) => {
         const p = document.createElement('p');
         p.textContent = text;
         content.appendChild(p);
+        totalWordCount += text.length;
         if (index === 0) {
           console.log('[WorkMode] First paragraph element:', p);
           console.log('[WorkMode] First paragraph textContent:', p.textContent);
@@ -115,6 +125,23 @@
     paper.appendChild(content);
     overlay.appendChild(toolbar);
     overlay.appendChild(paper);
+
+    // 创建底部状态栏
+    const statusBar = document.createElement('div');
+    statusBar.id = 'wps-statusbar';
+
+    const pageCount = Math.ceil(texts.length / 20); // 假设每页约20段
+    const currentPage = 1;
+    const wordCountFormatted = totalWordCount.toLocaleString();
+
+    statusBar.innerHTML = `
+      <span class="status-item">字数：${wordCountFormatted}</span>
+      <span class="status-divider">|</span>
+      <span class="status-item">页面：${currentPage}/${pageCount}</span>
+      <span class="status-divider">|</span>
+      <span class="status-item">拼写检查：已关闭</span>
+    `;
+    overlay.appendChild(statusBar);
 
     // Add to page
     document.body.appendChild(overlay);

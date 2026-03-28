@@ -80,12 +80,22 @@
       background-color: rgba(255, 255, 255, 0.1);
     }
 
+    /* 文档标题 */
+    #wps-doc-title {
+      color: white;
+      font-size: 14px;
+      margin-left: auto;
+      margin-right: 16px;
+      opacity: 0.9;
+    }
+
     /* A4 paper container */
     #wps-paper {
       width: 210mm;
-      height: 90vh !important; /* 使用90%视口高度 */
+      height: calc(90vh - 28px) !important; /* 减去状态栏高度 */
       background-color: #FFFFFF;
       margin: 30px auto;
+      margin-bottom: 58px; /* 额外底部边距避开状态栏 */
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       padding: 40px;
       box-sizing: border-box;
@@ -129,6 +139,31 @@
       color: #999999;
       padding: 60px 20px;
       font-size: 14px;
+    }
+
+    /* 底部状态栏 */
+    #wps-statusbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      background-color: #2B579A;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 12px;
+      color: white;
+      z-index: 2147483648;
+    }
+
+    #wps-statusbar .status-item {
+      margin: 0 8px;
+    }
+
+    #wps-statusbar .status-divider {
+      margin: 0 4px;
+      opacity: 0.5;
     }
 
     /* Active state - show overlay */
@@ -337,12 +372,21 @@
       toolbar.appendChild(logo);
       toolbar.appendChild(menu);
 
+      // 添加文档标题
+      const docTitle = document.createElement('div');
+      docTitle.id = 'wps-doc-title';
+      docTitle.textContent = '[兼容模式] 文档1.docx';
+      toolbar.appendChild(docTitle);
+
       // 纸张区域
       const paper = document.createElement('div');
       paper.id = 'wps-paper';
 
       const content = document.createElement('div');
       content.id = 'wps-content';
+
+      // 计算字数
+      let totalWordCount = 0;
 
       // 如果传入了元素列表，直接克隆元素
       if (elements.length > 0 && elements[0] instanceof HTMLElement) {
@@ -356,6 +400,7 @@
           cloned.style.lineHeight = computedStyle.lineHeight;
           cloned.style.color = computedStyle.color;
           content.appendChild(cloned);
+          totalWordCount += el.textContent.length;
         });
       } else if (elements.length > 0 && typeof elements[0] === 'string') {
         // 字符串文本，使用原来的方式
@@ -363,6 +408,7 @@
           const p = document.createElement('p');
           p.textContent = text;
           content.appendChild(p);
+          totalWordCount += text.length;
         });
       } else {
         // 空内容
@@ -375,6 +421,23 @@
       paper.appendChild(content);
       overlay.appendChild(toolbar);
       overlay.appendChild(paper);
+
+      // 创建底部状态栏
+      const statusBar = document.createElement('div');
+      statusBar.id = 'wps-statusbar';
+
+      const pageCount = Math.ceil(elements.length / 20);
+      const currentPage = 1;
+      const wordCountFormatted = totalWordCount.toLocaleString();
+
+      statusBar.innerHTML = `
+        <span class="status-item">字数：${wordCountFormatted}</span>
+        <span class="status-divider">|</span>
+        <span class="status-item">页面：${currentPage}/${pageCount}</span>
+        <span class="status-divider">|</span>
+        <span class="status-item">拼写检查：已关闭</span>
+      `;
+      overlay.appendChild(statusBar);
 
       return overlay;
     },
