@@ -31,20 +31,27 @@
     }
   }, true);
 
-  function toggleWorkMode() {
+  async function toggleWorkMode() {
     if (isActive) {
       removeOverlay();
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(err => {});
       }
     } else {
-      createOverlay();
+      await createOverlay();
       document.documentElement.requestFullscreen().catch(err => {});
     }
     isActive = !isActive;
   }
 
-  function createOverlay() {
+  async function createOverlay() {
+    // 等待配置加载完成
+    if (window.WorkModeConfigLoader && !window.WorkModeConfigLoader.ready) {
+      console.log('[WorkMode] 等待配置加载...');
+      await window.WorkModeConfigLoader.waitForReady();
+      console.log('[WorkMode] 配置加载完成');
+    }
+
     if (overlay) {
       overlay.remove();
     }
