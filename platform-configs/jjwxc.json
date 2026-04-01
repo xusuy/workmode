@@ -1,0 +1,26 @@
+{
+  "domains": ["jjwxc.net", "m.jjwxc.net", "www.jjwxc.net"],
+  "name": "晋江文学城",
+  "content": {
+    "selector": "#oneboolt .noveltext, #content .noveltext, .noveltext",
+    "paragraphSelector": "p",
+    "minParagraphCount": 10,
+    "minParagraphLength": 1
+  },
+  "nextChapter": {
+    "supported": true,
+    "method": "click",
+    "buttonSelector": "a",
+    "buttonText": "下一章",
+    "contentSelector": "#oneboolt .noveltext, #content .noveltext, .noveltext",
+    "loadDelay": 500,
+    "verificationDelay": 100
+  },
+  "chapterTitle": {
+    "selector": ".noveltitle, h1, h2",
+    "regex": "第(\\d+)章\\s+([^\\n]{1,30})",
+    "format": "第{chapter}章 {title}",
+    "fallback": "未知章节"
+  },
+  "excludeKeywords": ["收藏", "推荐", "评分", "评论", "作者", "标签", "广告", "VIP", "订阅"]
+}

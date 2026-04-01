@@ -64,7 +64,6 @@
           "minParagraphLength": 1
         },
         "nextChapter": {
-          "supported": true,
           "method": "click",
           "buttonSelector": "button",
           "buttonText": "下一章",
