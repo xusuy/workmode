@@ -158,7 +158,6 @@
     document.body.appendChild(overlay);
 
     // "加载下一章"按钮 - 必须在 appendChild 之后创建
-    const config = window.WorkModeConfigLoader?.getConfig();
     const buttonSelector = config?.nextChapter?.buttonSelector || 'button';
     const buttonText = config?.nextChapter?.buttonText || '下一章';
     const hasNextChapter = Array.from(document.querySelectorAll(buttonSelector)).some(btn =>
