@@ -36,6 +36,7 @@
       while (!this.ready) {
         await new Promise(resolve => setTimeout(resolve, 50));
       }
+      console.log('[WorkMode] waitForReady 完成');
       return this.getConfig();
     },
 
@@ -75,8 +76,9 @@
     // Fallback config for generic sites
     getFallbackConfig() {
       return {
+        name: '通用网站',
         content: {
-          selector: null, // Try all selectors
+          selector: null,
           "paragraphSelector": "p",
           "minParagraphCount": 10,
           "minParagraphLength": 1
