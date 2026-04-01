@@ -683,25 +683,38 @@
           throw new Error('HTTP ' + response.status);
         }
 
-        // 处理可能的 GBK 编码（晋江等网站使用）
-        let html;
+        // 获取原始字节
         const buffer = await response.arrayBuffer();
+        let html = '';
 
-        try {
-          // 尝试用 GBK 解码
-          const decoder = new TextDecoder('gbk');
-          html = decoder.decode(buffer);
-          console.log('[WorkMode] 使用 GBK 编码解码');
+        // 检查响应头中的编码
+        const contentType = response.headers.get('content-type');
+        console.log('[WorkMode] Content-Type:', contentType);
 
-          // 简单验证：如果解码结果包含大量乱码字符，回退到 UTF-8
-          if (html.includes('') && html.includes('')) {
-            console.log('[WorkMode] 检测到乱码，回退到 UTF-8');
-            const utfDecoder = new TextDecoder('utf-8');
-            html = utfDecoder.decode(buffer);
+        // 尝试从 HTML 中检测编码
+        const decoder = new TextDecoder('utf-8');
+        const preview = decoder.decode(buffer.slice(0, 1024));
+
+        // 检测 charset
+        let charset = 'utf-8';
+        const charsetMatch = preview.match(/charset=["']?([^"'\s>]+)/i);
+        if (charsetMatch) {
+          charset = charsetMatch[1].toLowerCase();
+          console.log('[WorkMode] 检测到 charset:', charset);
+        }
+
+        // 根据 charset 选择解码器
+        if (charset === 'gbk' || charset === 'gb2312' || charset === 'gb18030') {
+          console.log('[WorkMode] 使用 GBK 编码');
+          try {
+            const gbkDecoder = new TextDecoder('gbk');
+            html = gbkDecoder.decode(buffer);
+          } catch (e) {
+            console.log('[WorkMode] GBK 解码器不支持，尝试 UTF-8');
+            html = decoder.decode(buffer);
           }
-        } catch (e) {
-          console.log('[WorkMode] GBK 解码失败，使用 UTF-8');
-          const decoder = new TextDecoder('utf-8');
+        } else {
+          console.log('[WorkMode] 使用', charset, '编码');
           html = decoder.decode(buffer);
         }
 
