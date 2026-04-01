@@ -5,6 +5,7 @@
     "selector": "#oneboolt",
     "useBrSeparator": true,
     "excludeElementIds": ["note_danmu_wrapper", "favoriteshow_3"],
+    "excludeElementClasses": ["noveltitle"],
     "excludeAfterText": "作 者 推 文",
     "excludeTags": ["img", "p", "script"],
     "minParagraphCount": 10,
