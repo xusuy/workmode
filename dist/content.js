@@ -380,7 +380,6 @@
         console.log('[WorkMode] 页面 title:', titleText);
 
         // 起点格式: "第1章 牛顿的感谢 _《书名》小说在线阅读 - 起点中文网"
-        // 匹配从开头到"_"或"《"之间的内容
         const qidianMatch = titleText.match(/^(第\d+章\s+[^_《]+?)(?=_|《|$)/);
         if (qidianMatch) {
           const title = qidianMatch[1].trim();
@@ -388,8 +387,15 @@
           return title;
         }
 
+        // 晋江格式: "第一章 章节标题 _ 小说名 _ 晋江文学城"
+        const jjwxcMatch = titleText.match(/^(第[零一二三四五六七八九十百千0-9]+章\s+[^_]+)/);
+        if (jjwxcMatch) {
+          const title = jjwxcMatch[1].trim();
+          console.log('[WorkMode] 从 title 提取晋江标题:', title);
+          return title;
+        }
+
         // 番茄格式: "我不是戏神第1章 截鬼回家在线免费阅读_番茄小说官网"
-        // 匹配"第X章"后跟中文字符，在遇到"在线"、"免费"、"阅读"等词之前停止
         const fanqieMatch = titleText.match(/(第\d+章\s+.*?)(?=在线|免费|阅读|_|$)/);
         if (fanqieMatch) {
           const title = fanqieMatch[1].trim();
@@ -398,7 +404,7 @@
         }
 
         // 如果上面都失败，尝试简单匹配
-        const simpleMatch = titleText.match(/(第\d+章\s+[\u4e00-\u9fa5]+)/);
+        const simpleMatch = titleText.match(/(第[零一二三四五六七八九十百千0-9]+章\s+[\u4e00-\u9fa5]+)/);
         if (simpleMatch) {
           console.log('[WorkMode] 简单匹配标题:', simpleMatch[1]);
           return simpleMatch[1];
