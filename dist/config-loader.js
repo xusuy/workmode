@@ -5,6 +5,7 @@
   const ConfigLoader = {
     configs: {},
     currentConfig: null,
+    ready: false,
 
     // Load all platform configs
     async loadAllConfigs() {
@@ -25,6 +26,17 @@
           console.warn('[WorkMode] Failed to load config:', file, e);
         }
       }
+
+      this.ready = true;
+      console.log('[WorkMode] ConfigLoader ready:', this.ready);
+    },
+
+    // 等待配置加载完成
+    async waitForReady() {
+      while (!this.ready) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      return this.getConfig();
     },
 
     // Register a platform config
@@ -53,7 +65,11 @@
 
     // Get config (returns current or fallback)
     getConfig() {
-      return this.currentConfig || this.getFallbackConfig();
+      if (!this.currentConfig) {
+        console.warn('[WorkMode] getConfig called but currentConfig is null, using fallback');
+        this.currentConfig = this.getFallbackConfig();
+      }
+      return this.currentConfig;
     },
 
     // Fallback config for generic sites
