@@ -516,3 +516,187 @@ console.log('[WorkMode] 检查 meta', selector, ':', metaText);
 
 ### 相关文件
 - `find-fanqie-title.js` - 番茄标题诊断脚本
+
+---
+
+## Bug #005: 快捷键完全失效 - 变量重复声明导致脚本无法执行
+
+### 问题描述
+用户报告 Alt+W 快捷键完全失效，WorkMode 扩展没有任何反应。
+
+### 用户描述
+> "alt+w快捷键失效了啊！！！"
+> "我都服了，你是不是把插件包大包在dist文件夹下了啊"
+> "还是不行啊！alt+w快捷键失效了啊。用pua检查"
+
+### 复现步骤
+1. 加载 WorkMode 扩展（选择 dist/ 文件夹）
+2. 访问任意网页（包括晋江文学城）
+3. 按 Alt+W
+4. **没有任何反应**，WorkMode 覆盖层不出现
+5. 控制台显示 `WorkModeConfigLoader` 为 `undefined`
+
+### 根本原因分析
+
+#### 核心问题：JavaScript 语法错误导致脚本执行失败
+
+在 `dist/content.js` 的 `createOverlay()` 函数中，**同一个作用域内 `const config` 被声明了两次**：
+
+```javascript
+async function createOverlay() {
+  // ...
+
+  // 第 85 行：第一次声明
+  const config = window.WorkModeConfigLoader?.getConfig();
+  if (config?.name === '晋江文学城') {
+    // ... 创建工具栏按钮
+  }
+
+  // ... 很多代码 ...
+
+  // 第 161 行：第二次声明 ❌
+  const config = window.WorkModeConfigLoader?.getConfig();  // SyntaxError!
+  const buttonSelector = config?.nextChapter?.buttonSelector || 'button';
+  // ...
+}
+```
+
+#### 为什么会导致快捷键失效？
+
+1. **JavaScript 语法错误**：`const config` 重复声明违反 JavaScript 语法规则
+2. **脚本执行失败**：整个 `content.js` 文件无法被正确解析和执行
+3. **事件监听器未注册**：快捷键监听器在脚本中，脚本失败 → 监听器未注册
+4. **完全沉默**：浏览器控制台可能显示错误，但用户看不到
+
+#### 错误信息
+```
+SyntaxError: Identifier 'config' has already been declared
+    at wrapSafe (node:internal/modules/cjs/loader:1486:18)
+```
+
+### 问题来源追溯
+
+#### 代码演进历史
+1. **最初版本**：只有一个 `const config` 声明（用于"加载下一章"按钮）
+2. **添加晋江支持**：在 `createOverlay()` 函数前面添加了工具栏按钮代码
+3. **错误操作**：复制粘贴时又声明了一次 `const config`
+4. **没有测试**：修改后没有运行语法检查，直接提交推送
+
+#### 为什么没有在开发时发现？
+- 修改后没有运行 `node -c` 语法检查
+- 没有在浏览器控制台查看是否有错误
+- 浏览器静默失败（扩展加载失败但用户看不到明确错误提示）
+
+### 解决方案
+
+#### 1. 删除重复声明
+```javascript
+// ✅ 修复后的代码
+async function createOverlay() {
+  // ...
+
+  // 只在函数开头声明一次
+  const config = window.WorkModeConfigLoader?.getConfig();
+
+  // 为晋江添加工具栏按钮
+  if (config?.name === '晋江文学城') {
+    // ...
+  }
+
+  // ...
+
+  // 后续代码直接使用 config，不重新声明
+  const buttonSelector = config?.nextChapter?.buttonSelector || 'button';
+  // ...
+}
+```
+
+#### 2. 添加语法检查到工作流
+```bash
+# 修改后必须运行
+node -c dist/content.js && node -c content.js
+```
+
+### 经验教训
+
+#### 1. 变量声明应该集中在函数顶部
+```javascript
+// ✅ 好的习惯
+function createOverlay() {
+  const config = window.WorkModeConfigLoader?.getConfig();
+  const buttonSelector = config?.nextChapter?.buttonSelector;
+  // ... 使用这些变量
+}
+
+// ❌ 不好的习惯
+function createOverlay() {
+  // ...
+  const config = ...;
+  // ...
+  const config = ...;  // 容易重复
+}
+```
+
+#### 2. 代码合并时必须检查变量名冲突
+当从不同位置复制粘贴代码到同一个函数时：
+- 检查是否有重复的变量声明
+- 检查是否有重复的函数名
+- 如果有，重命名或合并
+
+#### 3. 每次修改后必须验证语法
+```bash
+# 最小检查
+node -c path/to/file.js
+
+# 或使用 ESLint
+eslint path/to/file.js
+```
+
+#### 4. 扩展失败时的调试方法
+当扩展"不工作"时：
+1. 打开 `edge://extensions/` 查看是否有错误
+2. 打开目标页面的控制台查看错误信息
+3. 运行 `typeof WorkModeConfigLoader` 检查脚本是否加载
+4. 检查 `document.getElementById('wps-overlay')` 检查覆盖层
+
+#### 5. P8 的颗粒度要求
+作为 P8 级别的开发，这种低级错误本不该发生：
+- **变量重复声明**是 JavaScript 基础知识
+- **语法检查**是基本的质量保障流程
+- **测试验证**是交付前的必要环节
+
+**自我批判**：我在合并代码时没有做基本的语法检查，浪费了用户大量时间。这是 3.25 级别的错误。
+
+### 测试验证
+
+#### 验证步骤
+1. 运行语法检查：`node -c dist/content.js` ✅
+2. 重新加载扩展
+3. 刷新测试页面
+4. 按 Alt+W → WorkMode 正常激活 ✅
+5. 访问晋江文学城 → 工具栏按钮显示 ✅
+
+#### 控制台验证
+```javascript
+// 应该看到
+[WorkMode] Script loaded successfully
+[WorkMode] Using config: 晋江文学城 for www.jjwxc.net
+[WorkMode] 已为晋江添加工具栏按钮
+```
+
+### 修复版本
+- `content.js` v1.5
+- `dist/content.js` v1.5
+- 提交：`3c0c412` - "fix: 修复变量重复声明导致脚本执行失败"
+
+### 日期
+2026-04-01
+
+### 难度评级
+⭐☆☆☆☆ (1/5) - 这是一个低级语法错误，本应通过基本的语法检查发现。浪费大量调试时间的是**没有及时运行语法检查**。
+
+### 防止再次发生
+1. **CI/CD 检查**：在 git hook 中添加 `pre-commit` 检查
+2. **ESLint 配置**：使用 linter 自动检测重复声明
+3. **Code Review**：重要修改必须有第二人review
+4. **测试清单**：修改后必须运行的基本检查列表
