@@ -660,6 +660,10 @@
         }
 
         const nextUrl = nextButton.href;
+        console.log('[WorkMode] === 找到下一章链接 ===');
+        console.log('[WorkMode] 链接文本:', nextButton.textContent.trim());
+        console.log('[WorkMode] 链接地址:', nextUrl);
+
         if (!nextUrl) {
           throw new Error('无法获取下一章 URL');
         }
@@ -681,17 +685,24 @@
 
         // 处理可能的 GBK 编码（晋江等网站使用）
         let html;
+        const buffer = await response.arrayBuffer();
+
         try {
-          // 先尝试用 arrayBuffer + TextDecoder 处理 GBK
-          const buffer = await response.arrayBuffer();
+          // 尝试用 GBK 解码
           const decoder = new TextDecoder('gbk');
           html = decoder.decode(buffer);
           console.log('[WorkMode] 使用 GBK 编码解码');
+
+          // 简单验证：如果解码结果包含大量乱码字符，回退到 UTF-8
+          if (html.includes('') && html.includes('')) {
+            console.log('[WorkMode] 检测到乱码，回退到 UTF-8');
+            const utfDecoder = new TextDecoder('utf-8');
+            html = utfDecoder.decode(buffer);
+          }
         } catch (e) {
-          // 如果失败，回退到默认的 text()
-          console.log('[WorkMode] GBK 解码失败，使用默认解码');
-          const textResponse = await fetch(nextUrl);
-          html = await textResponse.text();
+          console.log('[WorkMode] GBK 解码失败，使用 UTF-8');
+          const decoder = new TextDecoder('utf-8');
+          html = decoder.decode(buffer);
         }
 
         const parser = new DOMParser();
@@ -897,7 +908,10 @@
         chapterState.lastFetchedUrl = nextUrl;
         chapterState.lastFetchedHtml = html;
         chapterState.lastFetchedDoc = newDoc;
-        console.log('[WorkMode] 已保存章节信息用于下次查找链接');
+        console.log('[WorkMode] === 状态已保存 ===');
+        console.log('[WorkMode] lastFetchedUrl:', nextUrl);
+        console.log('[WorkMode] lastFetchedDoc 是否存在:', !!newDoc);
+        console.log('[WorkMode] 下次查找链接将使用此文档');
 
         // 检查新页面是否还有"下一章"
         const verificationDelay = config?.nextChapter?.verificationDelay || 100;
