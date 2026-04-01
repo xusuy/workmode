@@ -86,6 +86,20 @@
     docTitle.textContent = '[兼容模式] 文档1.docx';
     toolbar.appendChild(docTitle);
 
+    // 为晋江添加工具栏中的"加载下一章"按钮
+    const config = window.WorkModeConfigLoader?.getConfig();
+    if (config?.name === '晋江文学城') {
+      const nextChapterBtn = document.createElement('button');
+      nextChapterBtn.id = 'wps-next-chapter-btn';
+      nextChapterBtn.textContent = '加载下一章';
+      nextChapterBtn.style.cssText = 'margin-left: 20px; padding: 6px 16px; font-size: 14px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 4px;';
+      nextChapterBtn.addEventListener('click', () => {
+        loadNextChapter();
+      });
+      toolbar.appendChild(nextChapterBtn);
+      console.log('[WorkMode] 已为晋江添加工具栏按钮');
+    }
+
     // Paper container
     const paper = document.createElement('div');
     paper.id = 'wps-paper';
@@ -614,21 +628,6 @@
 
       content.appendChild(cloned);
     });
-
-    // 为晋江添加章节末尾的"下一章"按钮
-    const config = window.WorkModeConfigLoader?.getConfig();
-    console.log('[WorkMode] 当前平台:', config?.name);
-    if (config?.name === '晋江文学城') {
-      console.log('[WorkMode] 为晋江添加章节末尾按钮');
-      const nextChapterBtn = document.createElement('div');
-      nextChapterBtn.className = 'jjwxc-next-chapter-btn';
-      nextChapterBtn.innerHTML = '<button style="margin: 20px auto; padding: 10px 30px; font-size: 16px; cursor: pointer; display: block; background: #4CAF50; color: white; border: none; border-radius: 4px;">加载下一章</button>';
-      nextChapterBtn.querySelector('button').addEventListener('click', () => {
-        loadNextChapter();
-      });
-      content.appendChild(nextChapterBtn);
-      console.log('[WorkMode] 下一章按钮已添加');
-    }
 
     setTimeout(() => {
       separator.scrollIntoView({ behavior: 'smooth', block: 'start' });
