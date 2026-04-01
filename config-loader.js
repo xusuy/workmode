@@ -46,7 +46,9 @@
         }
       }
       console.log('[WorkMode] No specific config found for', hostname + ', using fallback');
-      return null; // No config found, use fallback
+      // 没有找到匹配的配置，使用回退配置并设置 currentConfig
+      this.currentConfig = this.getFallbackConfig();
+      return this.currentConfig;
     },
 
     // Get config (returns current or fallback)
