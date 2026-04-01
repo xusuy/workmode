@@ -15,8 +15,8 @@
   "nextChapter": {
     "supported": true,
     "method": "fetch",
-    "buttonSelector": "a",
-    "buttonText": "下一章",
+    "urlPattern": "chapterid",
+    "urlParam": "chapterid",
     "contentSelector": "#oneboolt",
     "loadDelay": 1000,
     "verificationDelay": 200

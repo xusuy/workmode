@@ -635,41 +635,66 @@
         // MPA 模式：使用 fetch 获取下一页内容
         console.log('[WorkMode] 使用 MPA fetch 模式');
 
-        // 确定从哪个文档查找"下一章"链接
-        // 如果之前有 fetch 过的页面，从那个页面找；否则从当前页面找
-        const sourceDoc = chapterState.lastFetchedDoc || document;
-        console.log('[WorkMode] 查找链接的来源:', chapterState.lastFetchedUrl ? '上次加载的章节' : '当前页面');
-        if (chapterState.lastFetchedUrl) {
-          console.log('[WorkMode] 上次加载的URL:', chapterState.lastFetchedUrl);
-        }
+        let nextUrl;
 
-        // 找到"下一章"链接 - 从正确的文档中查找
-        let nextButton = Array.from(sourceDoc.querySelectorAll(buttonSelector)).find(btn =>
-          btn.textContent.trim() === buttonText
-        );
+        // 检查是否配置了 URL 参数递增模式（如晋江的 chapterid）
+        const urlParam = config?.nextChapter?.urlParam;
+        if (urlParam) {
+          console.log('[WorkMode] 使用 URL 参数递增模式:', urlParam);
 
-        // 如果没有完全匹配，则选择包含该文本的
-        if (!nextButton) {
-          nextButton = Array.from(sourceDoc.querySelectorAll(buttonSelector)).find(btn =>
-            btn.textContent.includes(buttonText) && btn.textContent.trim().length < 20
+          // 获取当前 URL（优先使用上次 fetch 的 URL）
+          const currentUrl = chapterState.lastFetchedUrl || window.location.href;
+          console.log('[WorkMode] 当前 URL:', currentUrl);
+
+          // 解析 URL，提取并递增参数
+          const urlObj = new URL(currentUrl);
+          const currentChapterId = urlObj.searchParams.get(urlParam);
+
+          if (currentChapterId) {
+            const nextChapterId = parseInt(currentChapterId) + 1;
+            urlObj.searchParams.set(urlParam, nextChapterId.toString());
+            nextUrl = urlObj.href;
+            console.log('[WorkMode]', urlParam, ':', currentChapterId, '->', nextChapterId);
+            console.log('[WorkMode] 构造的下一章 URL:', nextUrl);
+          } else {
+            throw new Error('URL 中未找到参数: ' + urlParam);
+          }
+        } else {
+          // 传统模式：从页面查找"下一章"链接
+          console.log('[WorkMode] 使用链接查找模式');
+
+          // 确定从哪个文档查找"下一章"链接
+          const sourceDoc = chapterState.lastFetchedDoc || document;
+          console.log('[WorkMode] 查找链接的来源:', chapterState.lastFetchedUrl ? '上次加载的章节' : '当前页面');
+          if (chapterState.lastFetchedUrl) {
+            console.log('[WorkMode] 上次加载的URL:', chapterState.lastFetchedUrl);
+          }
+
+          // 找到"下一章"链接
+          let nextButton = Array.from(sourceDoc.querySelectorAll(buttonSelector)).find(btn =>
+            btn.textContent.trim() === buttonText
           );
+
+          if (!nextButton) {
+            nextButton = Array.from(sourceDoc.querySelectorAll(buttonSelector)).find(btn =>
+              btn.textContent.includes(buttonText) && btn.textContent.trim().length < 20
+            );
+          }
+
+          if (!nextButton) {
+            throw new Error('未找到"' + buttonText + '"链接');
+          }
+
+          nextUrl = nextButton.href;
+          console.log('[WorkMode] 找到链接:', nextButton.textContent.trim(), '->', nextUrl);
         }
 
-        if (!nextButton) {
-          throw new Error('未找到"' + buttonText + '"链接');
-        }
-
-        const nextUrl = nextButton.href;
-        console.log('[WorkMode] === 找到下一章链接 ===');
-        console.log('[WorkMode] 链接文本:', nextButton.textContent.trim());
-        console.log('[WorkMode] 链接地址:', nextUrl);
+        console.log('[WorkMode] === 下一章 URL ===');
+        console.log('[WorkMode] URL:', nextUrl);
 
         if (!nextUrl) {
           throw new Error('无法获取下一章 URL');
         }
-
-        console.log('[WorkMode] 下一章 URL:', nextUrl);
-        console.log('[WorkMode] 链接文本:', nextButton.textContent.trim());
 
         // 检查是否重复加载
         if (chapterState.loadedChapters.includes(nextUrl)) {
