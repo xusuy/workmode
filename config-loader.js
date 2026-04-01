@@ -88,4 +88,12 @@
   };
 
   window.WorkModeConfigLoader = ConfigLoader;
+
+  // 自动加载所有配置
+  ConfigLoader.loadAllConfigs().then(() => {
+    console.log('[WorkMode] ConfigLoader initialization complete');
+    ConfigLoader.getConfigForPage(); // 预加载当前页面配置
+  }).catch(err => {
+    console.error('[WorkMode] ConfigLoader initialization failed:', err);
+  });
 })();
