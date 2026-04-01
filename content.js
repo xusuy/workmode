@@ -198,38 +198,27 @@
           const minParagraphLength = config.content.minParagraphLength || 1;
           const minParagraphCount = config.content.minParagraphCount || 10;
 
-          // Get content HTML, optionally excluding after a certain element
+          // Get content HTML and clean it
           let html = container.innerHTML;
 
-          // Check if we need to exclude content after a specific ID
-          if (config.content.excludeAfterId) {
-            const excludeElement = container.querySelector('#' + config.content.excludeAfterId);
-            if (excludeElement) {
-              console.log('[WorkMode] 在容器内找到排除元素:', config.content.excludeAfterId);
-              // Find the position of this element among container's children
-              const children = Array.from(container.children);
-              const excludeIndex = children.indexOf(excludeElement);
-              if (excludeIndex >= 0) {
-                console.log('[WorkMode] 排除元素位置:', excludeIndex, '，保留之前的', excludeIndex, '个子元素');
-                // Clone and only keep elements before this one
-                const tempDiv = document.createElement('div');
-                for (let i = 0; i < excludeIndex; i++) {
-                  tempDiv.appendChild(container.children[i].cloneNode(true));
-                }
-                html = tempDiv.innerHTML;
-                console.log('[WorkMode] 已排除指定元素及之后的所有内容');
+          // Create a temporary div to manipulate HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+
+          // 1. Exclude specific elements by ID
+          if (config.content.excludeElementIds && Array.isArray(config.content.excludeElementIds)) {
+            config.content.excludeElementIds.forEach(id => {
+              const el = tempDiv.querySelector('#' + id);
+              if (el) {
+                console.log('[WorkMode] 移除元素:', '#' + id);
+                el.remove();
               }
-            } else {
-              console.log('[WorkMode] 容器内未找到排除元素:', config.content.excludeAfterId);
-            }
+            });
           }
 
-          // Check if we need to exclude content after specific text
+          // 2. Exclude content after specific text
           if (config.content.excludeAfterText) {
             console.log('[WorkMode] 查找排除文本:', config.content.excludeAfterText);
-            // Parse the HTML to find elements with the text
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
             const children = Array.from(tempDiv.children);
             let foundIndex = -1;
 
@@ -242,25 +231,25 @@
 
             if (foundIndex >= 0) {
               console.log('[WorkMode] 找到排除文本元素，位置:', foundIndex);
-              // Only keep elements before this one
-              const newDiv = document.createElement('div');
-              for (let i = 0; i < foundIndex; i++) {
-                newDiv.appendChild(children[i].cloneNode(true));
+              // Remove elements from foundIndex onwards
+              for (let i = tempDiv.children.length - 1; i >= foundIndex; i--) {
+                tempDiv.children[i].remove();
               }
-              html = newDiv.innerHTML;
-              console.log('[WorkMode] 已排除指定文本之后的内容');
             }
           }
 
-          // Remove p tags if configured
-          if (config.content.removeEmptyTags || config.content.excludePTags) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            const pTags = tempDiv.querySelectorAll('p');
-            pTags.forEach(p => p.remove());
-            html = tempDiv.innerHTML;
-            console.log('[WorkMode] 已移除所有 p 标签');
+          // 3. Exclude specific tags
+          if (config.content.excludeTags && Array.isArray(config.content.excludeTags)) {
+            config.content.excludeTags.forEach(tag => {
+              const tags = tempDiv.querySelectorAll(tag);
+              if (tags.length > 0) {
+                console.log('[WorkMode] 移除', tags.length, '个', tag, '标签');
+                tags.forEach(t => t.remove());
+              }
+            });
           }
+
+          html = tempDiv.innerHTML;
 
           // Split by <br>
           const parts = html.split(/<br\s*\/?>/i);
@@ -736,28 +725,24 @@
           let html = newContent.innerHTML;
 
           // Check if we need to exclude content after a specific ID
-          if (config.content.excludeAfterId) {
-            const excludeElement = newContent.querySelector('#' + config.content.excludeAfterId);
-            if (excludeElement) {
-              console.log('[WorkMode] 新章节在容器内找到排除元素:', config.content.excludeAfterId);
-              const children = Array.from(newContent.children);
-              const excludeIndex = children.indexOf(excludeElement);
-              if (excludeIndex >= 0) {
-                console.log('[WorkMode] 新章节排除元素位置:', excludeIndex);
-                const tempDiv = document.createElement('div');
-                for (let i = 0; i < excludeIndex; i++) {
-                  tempDiv.appendChild(newContent.children[i].cloneNode(true));
-                }
-                html = tempDiv.innerHTML;
+          // Create a temporary div to manipulate HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+
+          // 1. Exclude specific elements by ID
+          if (config.content.excludeElementIds && Array.isArray(config.content.excludeElementIds)) {
+            config.content.excludeElementIds.forEach(id => {
+              const el = tempDiv.querySelector('#' + id);
+              if (el) {
+                console.log('[WorkMode] 新章节移除元素:', '#' + id);
+                el.remove();
               }
-            }
+            });
           }
 
-          // Check if we need to exclude content after specific text
+          // 2. Exclude content after specific text
           if (config.content.excludeAfterText) {
             console.log('[WorkMode] 新章节查找排除文本:', config.content.excludeAfterText);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
             const children = Array.from(tempDiv.children);
             let foundIndex = -1;
 
@@ -770,23 +755,24 @@
 
             if (foundIndex >= 0) {
               console.log('[WorkMode] 新章节找到排除文本元素，位置:', foundIndex);
-              const newDiv = document.createElement('div');
-              for (let i = 0; i < foundIndex; i++) {
-                newDiv.appendChild(children[i].cloneNode(true));
+              for (let i = tempDiv.children.length - 1; i >= foundIndex; i--) {
+                tempDiv.children[i].remove();
               }
-              html = newDiv.innerHTML;
             }
           }
 
-          // Remove p tags if configured
-          if (config.content.removeEmptyTags || config.content.excludePTags) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            const pTags = tempDiv.querySelectorAll('p');
-            pTags.forEach(p => p.remove());
-            html = tempDiv.innerHTML;
-            console.log('[WorkMode] 新章节已移除所有 p 标签');
+          // 3. Exclude specific tags
+          if (config.content.excludeTags && Array.isArray(config.content.excludeTags)) {
+            config.content.excludeTags.forEach(tag => {
+              const tags = tempDiv.querySelectorAll(tag);
+              if (tags.length > 0) {
+                console.log('[WorkMode] 新章节移除', tags.length, '个', tag, '标签');
+                tags.forEach(t => t.remove());
+              }
+            });
           }
+
+          html = tempDiv.innerHTML;
 
           const parts = html.split(/<br\s*\/?>/i);
 
@@ -920,28 +906,24 @@
           let html = newContent.innerHTML;
 
           // Check if we need to exclude content after a specific ID
-          if (config.content.excludeAfterId) {
-            const excludeElement = newContent.querySelector('#' + config.content.excludeAfterId);
-            if (excludeElement) {
-              console.log('[WorkMode] 新章节在容器内找到排除元素:', config.content.excludeAfterId);
-              const children = Array.from(newContent.children);
-              const excludeIndex = children.indexOf(excludeElement);
-              if (excludeIndex >= 0) {
-                console.log('[WorkMode] 新章节排除元素位置:', excludeIndex);
-                const tempDiv = document.createElement('div');
-                for (let i = 0; i < excludeIndex; i++) {
-                  tempDiv.appendChild(newContent.children[i].cloneNode(true));
-                }
-                html = tempDiv.innerHTML;
+          // Create a temporary div to manipulate HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+
+          // 1. Exclude specific elements by ID
+          if (config.content.excludeElementIds && Array.isArray(config.content.excludeElementIds)) {
+            config.content.excludeElementIds.forEach(id => {
+              const el = tempDiv.querySelector('#' + id);
+              if (el) {
+                console.log('[WorkMode] 新章节移除元素:', '#' + id);
+                el.remove();
               }
-            }
+            });
           }
 
-          // Check if we need to exclude content after specific text
+          // 2. Exclude content after specific text
           if (config.content.excludeAfterText) {
             console.log('[WorkMode] 新章节查找排除文本:', config.content.excludeAfterText);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
             const children = Array.from(tempDiv.children);
             let foundIndex = -1;
 
@@ -954,23 +936,24 @@
 
             if (foundIndex >= 0) {
               console.log('[WorkMode] 新章节找到排除文本元素，位置:', foundIndex);
-              const newDiv = document.createElement('div');
-              for (let i = 0; i < foundIndex; i++) {
-                newDiv.appendChild(children[i].cloneNode(true));
+              for (let i = tempDiv.children.length - 1; i >= foundIndex; i--) {
+                tempDiv.children[i].remove();
               }
-              html = newDiv.innerHTML;
             }
           }
 
-          // Remove p tags if configured
-          if (config.content.removeEmptyTags || config.content.excludePTags) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            const pTags = tempDiv.querySelectorAll('p');
-            pTags.forEach(p => p.remove());
-            html = tempDiv.innerHTML;
-            console.log('[WorkMode] 新章节已移除所有 p 标签');
+          // 3. Exclude specific tags
+          if (config.content.excludeTags && Array.isArray(config.content.excludeTags)) {
+            config.content.excludeTags.forEach(tag => {
+              const tags = tempDiv.querySelectorAll(tag);
+              if (tags.length > 0) {
+                console.log('[WorkMode] 新章节移除', tags.length, '个', tag, '标签');
+                tags.forEach(t => t.remove());
+              }
+            });
           }
+
+          html = tempDiv.innerHTML;
 
           const parts = html.split(/<br\s*\/?>/i);
 

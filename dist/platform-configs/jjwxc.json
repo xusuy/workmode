@@ -4,9 +4,9 @@
   "content": {
     "selector": "#oneboolt",
     "useBrSeparator": true,
-    "excludeAfterId": "favoriteshow_3",
+    "excludeElementIds": ["note_danmu_wrapper", "favoriteshow_3"],
     "excludeAfterText": "作 者 推 文",
-    "removeEmptyTags": true,
+    "excludeTags": ["img", "p", "script"],
     "minParagraphCount": 10,
     "minParagraphLength": 1
   },
