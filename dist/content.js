@@ -608,6 +608,18 @@
       content.appendChild(cloned);
     });
 
+    // 为晋江添加章节末尾的"下一章"按钮
+    const config = window.WorkModeConfigLoader?.getConfig();
+    if (config?.name === '晋江文学城') {
+      const nextChapterBtn = document.createElement('div');
+      nextChapterBtn.className = 'jjwxc-next-chapter-btn';
+      nextChapterBtn.innerHTML = '<button style="margin: 20px auto; padding: 10px 30px; font-size: 16px; cursor: pointer; display: block; background: #4CAF50; color: white; border: none; border-radius: 4px;">加载下一章</button>';
+      nextChapterBtn.querySelector('button').addEventListener('click', () => {
+        loadNextChapter();
+      });
+      content.appendChild(nextChapterBtn);
+    }
+
     setTimeout(() => {
       separator.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
