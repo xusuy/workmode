@@ -14,12 +14,12 @@
   },
   "nextChapter": {
     "supported": true,
-    "method": "click",
+    "method": "fetch",
     "buttonSelector": "a",
     "buttonText": "下一章",
-    "contentSelector": "#oneboolt, .noveltext",
-    "loadDelay": 500,
-    "verificationDelay": 100
+    "contentSelector": "#oneboolt",
+    "loadDelay": 1000,
+    "verificationDelay": 200
   },
   "chapterTitle": {
     "selector": ".noveltitle, h1, h2",
