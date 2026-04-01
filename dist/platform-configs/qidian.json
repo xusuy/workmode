@@ -1,0 +1,38 @@
+{
+  "domains": ["qidian.com", "m.qidian.com", "www.qidian.com"],
+  "name": "起点中文网",
+  "content": {
+    "selector": ".content",
+    "paragraphSelector": "p",
+    "minParagraphCount": 10,
+    "minParagraphLength": 1
+  },
+  "nextChapter": {
+    "supported": true,
+    "method": "fetch",
+    "buttonSelector": "a",
+    "buttonText": "下一章",
+    "contentSelector": ".content",
+    "loadDelay": 1000,
+    "verificationDelay": 200
+  },
+  "chapterTitle": {
+    "selector": ".chapter-title, h1",
+    "regex": "第(\\d+)章\\s+([^\\n]{1,30})",
+    "format": "第{chapter}章 {title}",
+    "fallback": "未知章节"
+  },
+  "excludeKeywords": [
+    "cookie",
+    "隐私政策",
+    "服务条款",
+    "copyright",
+    "©",
+    "点击接受",
+    "all rights reserved",
+    "个性化",
+    "内容设置",
+    "拒绝所有",
+    "接受所有"
+  ]
+}

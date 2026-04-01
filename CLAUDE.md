@@ -89,6 +89,58 @@ const novelSelectors = [
 
 显示在 A4 纸内容区域（不要放在工具栏 - 工具栏是固定的 WPS 蓝色条）。
 
+### 平台适配配置
+
+WorkMode 使用 JSON 配置文件适配不同小说平台。
+
+**配置位置:** `dist/platform-configs/*.json`
+
+**配置结构:**
+- `domains`: 支持的域名列表
+- `content.selector`: 内容容器选择器
+- `content.paragraphSelector`: 段落元素选择器
+- `content.minParagraphCount`: 最小段落数阈值
+- `nextChapter.buttonSelector`: 下一章按钮选择器
+- `nextChapter.buttonText`: 下一章按钮文本
+- `nextChapter.contentSelector`: 下一章内容容器选择器
+- `chapterTitle.regex`: 章节标题提取正则
+- `chapterTitle.format`: 章节标题格式模板
+- `excludeKeywords`: 排除关键词列表
+
+**添加新平台:**
+1. 在 `dist/platform-configs/` 创建新的 JSON 文件
+2. 使用浏览器 DevTools 找到内容容器和按钮选择器
+3. 更新 `dist/config-loader.js` 的 `configFiles` 数组
+4. 重载扩展
+
+**配置示例:**
+```json
+{
+  "domains": ["example.com"],
+  "name": "示例平台",
+  "content": {
+    "selector": ".content-class",
+    "paragraphSelector": "p",
+    "minParagraphCount": 10,
+    "minParagraphLength": 1
+  },
+  "nextChapter": {
+    "method": "click",
+    "buttonSelector": "button",
+    "buttonText": "下一章",
+    "contentSelector": ".content-class",
+    "loadDelay": 500,
+    "verificationDelay": 100
+  },
+  "chapterTitle": {
+    "regex": "第(\\d+)章\\s+(.+)",
+    "format": "第{chapter}章 {title}",
+    "fallback": "未知章节"
+  },
+  "excludeKeywords": ["广告", "VIP"]
+}
+```
+
 ## 开发命令
 
 ### 安装扩展（Edge/Chrome）
