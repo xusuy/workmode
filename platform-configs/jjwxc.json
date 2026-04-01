@@ -4,7 +4,7 @@
   "content": {
     "selector": "#oneboolt, .noveltext",
     "useBrSeparator": true,
-    "excludeAfterId": "favoriteshow_3",
+    "excludeAfterText": "作 者 推 文",
     "minParagraphCount": 10,
     "minParagraphLength": 1
   },
