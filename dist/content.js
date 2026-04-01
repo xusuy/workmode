@@ -1,16 +1,10 @@
 // WorkMode Content Script
 // Press Alt+W to toggle WPS camouflage mode
 
-(async function() {
+(function() {
   'use strict';
 
   console.log('[WorkMode] Script loaded successfully');
-
-  // Initialize config loader
-  if (window.WorkModeConfigLoader) {
-    await window.WorkModeConfigLoader.loadAllConfigs();
-    window.WorkModeConfigLoader.getConfigForPage();
-  }
 
   let isActive = false;
   let overlay = null;
@@ -23,6 +17,7 @@
     lastFetchedDoc: null         // 最后一次 fetch 的解析文档
   };
 
+  // 立即注册快捷键监听器（不被 async 阻塞）
   document.addEventListener('keydown', function(e) {
     if (e.altKey && e.code === 'KeyW') {
       e.preventDefault();
