@@ -610,7 +610,9 @@
 
     // 为晋江添加章节末尾的"下一章"按钮
     const config = window.WorkModeConfigLoader?.getConfig();
+    console.log('[WorkMode] 当前平台:', config?.name);
     if (config?.name === '晋江文学城') {
+      console.log('[WorkMode] 为晋江添加章节末尾按钮');
       const nextChapterBtn = document.createElement('div');
       nextChapterBtn.className = 'jjwxc-next-chapter-btn';
       nextChapterBtn.innerHTML = '<button style="margin: 20px auto; padding: 10px 30px; font-size: 16px; cursor: pointer; display: block; background: #4CAF50; color: white; border: none; border-radius: 4px;">加载下一章</button>';
@@ -618,6 +620,7 @@
         loadNextChapter();
       });
       content.appendChild(nextChapterBtn);
+      console.log('[WorkMode] 下一章按钮已添加');
     }
 
     setTimeout(() => {
