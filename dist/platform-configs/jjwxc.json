@@ -4,6 +4,7 @@
   "content": {
     "selector": "#oneboolt",
     "useBrSeparator": true,
+    "useFirstOfClass": "novelbody",
     "excludeElementIds": ["note_danmu_wrapper", "favoriteshow_3"],
     "excludeElementClasses": ["noveltitle"],
     "excludeAfterText": "作 者 推 文",

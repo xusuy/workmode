@@ -198,8 +198,20 @@
           const minParagraphLength = config.content.minParagraphLength || 1;
           const minParagraphCount = config.content.minParagraphCount || 10;
 
+          // Check if we should only use the first element of a specific class
+          let contentContainer = container;
+          if (config.content.useFirstOfClass) {
+            const firstElement = container.querySelector('.' + config.content.useFirstOfClass);
+            if (firstElement) {
+              console.log('[WorkMode] 只使用第一个', '.' + config.content.useFirstOfClass, '元素');
+              contentContainer = firstElement;
+            } else {
+              console.log('[WorkMode] 未找到', '.' + config.content.useFirstOfClass, '元素，使用整个容器');
+            }
+          }
+
           // Get content HTML and clean it
-          let html = container.innerHTML;
+          let html = contentContainer.innerHTML;
 
           // Create a temporary div to manipulate HTML
           const tempDiv = document.createElement('div');
@@ -733,7 +745,18 @@
         if (config?.content?.useBrSeparator) {
           // Use <br> separator mode (for JJWXC, etc.)
           console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
-          let html = newContent.innerHTML;
+
+          // Check if we should only use the first element of a specific class
+          let contentContainer = newContent;
+          if (config.content.useFirstOfClass) {
+            const firstElement = newContent.querySelector('.' + config.content.useFirstOfClass);
+            if (firstElement) {
+              console.log('[WorkMode] 新章节只使用第一个', '.' + config.content.useFirstOfClass, '元素');
+              contentContainer = firstElement;
+            }
+          }
+
+          let html = contentContainer.innerHTML;
 
           // Check if we need to exclude content after a specific ID
           // Create a temporary div to manipulate HTML
