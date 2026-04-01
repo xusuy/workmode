@@ -8,7 +8,7 @@
     "excludeElementIds": ["note_danmu_wrapper", "favoriteshow_3"],
     "excludeElementClasses": ["noveltitle"],
     "excludeAfterText": "作 者 推 文",
-    "excludeTags": ["img", "p", "script"],
+    "excludeTags": ["img", "p", "script", "font"],
     "minParagraphCount": 10,
     "minParagraphLength": 1
   },
