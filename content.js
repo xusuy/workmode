@@ -673,7 +673,21 @@
           throw new Error('HTTP ' + response.status);
         }
 
-        const html = await response.text();
+        // 处理可能的 GBK 编码（晋江等网站使用）
+        let html;
+        try {
+          // 先尝试用 arrayBuffer + TextDecoder 处理 GBK
+          const buffer = await response.arrayBuffer();
+          const decoder = new TextDecoder('gbk');
+          html = decoder.decode(buffer);
+          console.log('[WorkMode] 使用 GBK 编码解码');
+        } catch (e) {
+          // 如果失败，回退到默认的 text()
+          console.log('[WorkMode] GBK 解码失败，使用默认解码');
+          const textResponse = await fetch(nextUrl);
+          html = await textResponse.text();
+        }
+
         const parser = new DOMParser();
         const newDoc = parser.parseFromString(html, 'text/html');
 
