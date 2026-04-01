@@ -201,47 +201,65 @@
           // Get content HTML, optionally excluding after a certain element
           let html = container.innerHTML;
 
-          // Check if we need to exclude content after a specific element
+          // Check if we need to exclude content after a specific ID
           if (config.content.excludeAfterId) {
             const excludeElement = container.querySelector('#' + config.content.excludeAfterId);
             if (excludeElement) {
-              console.log('[WorkMode] 排除元素之后的内容:', config.content.excludeAfterId);
-              // Clone the container and remove the exclude element and everything after
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const excludeEl = tempDiv.querySelector('#' + config.content.excludeAfterId);
-              if (excludeEl) {
-                // Remove the element and all following siblings
-                let current = excludeEl;
-                while (current) {
-                  const next = current.nextSibling;
-                  current.remove();
-                  current = next;
+              console.log('[WorkMode] 在容器内找到排除元素:', config.content.excludeAfterId);
+              // Find the position of this element among container's children
+              const children = Array.from(container.children);
+              const excludeIndex = children.indexOf(excludeElement);
+              if (excludeIndex >= 0) {
+                console.log('[WorkMode] 排除元素位置:', excludeIndex, '，保留之前的', excludeIndex, '个子元素');
+                // Clone and only keep elements before this one
+                const tempDiv = document.createElement('div');
+                for (let i = 0; i < excludeIndex; i++) {
+                  tempDiv.appendChild(container.children[i].cloneNode(true));
                 }
                 html = tempDiv.innerHTML;
-                console.log('[WorkMode] 已排除指定元素之后的内容');
+                console.log('[WorkMode] 已排除指定元素及之后的所有内容');
               }
+            } else {
+              console.log('[WorkMode] 容器内未找到排除元素:', config.content.excludeAfterId);
             }
           }
 
           // Check if we need to exclude content after specific text
           if (config.content.excludeAfterText) {
             console.log('[WorkMode] 查找排除文本:', config.content.excludeAfterText);
-            // Iterate through direct children to find the element with the text
-            for (let i = 0; i < container.children.length; i++) {
-              const child = container.children[i];
-              if (child.textContent.includes(config.content.excludeAfterText)) {
-                console.log('[WorkMode] 找到排除文本元素，截取到第', i, '个子元素');
-                // Clone and only keep elements before this one
-                const tempDiv = document.createElement('div');
-                for (let j = 0; j < i; j++) {
-                  tempDiv.appendChild(container.children[j].cloneNode(true));
-                }
-                html = tempDiv.innerHTML;
-                console.log('[WorkMode] 已排除指定文本之后的内容');
+            // Parse the HTML to find elements with the text
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const children = Array.from(tempDiv.children);
+            let foundIndex = -1;
+
+            for (let i = 0; i < children.length; i++) {
+              if (children[i].textContent.includes(config.content.excludeAfterText)) {
+                foundIndex = i;
                 break;
               }
             }
+
+            if (foundIndex >= 0) {
+              console.log('[WorkMode] 找到排除文本元素，位置:', foundIndex);
+              // Only keep elements before this one
+              const newDiv = document.createElement('div');
+              for (let i = 0; i < foundIndex; i++) {
+                newDiv.appendChild(children[i].cloneNode(true));
+              }
+              html = newDiv.innerHTML;
+              console.log('[WorkMode] 已排除指定文本之后的内容');
+            }
+          }
+
+          // Remove p tags if configured
+          if (config.content.removeEmptyTags || config.content.excludePTags) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const pTags = tempDiv.querySelectorAll('p');
+            pTags.forEach(p => p.remove());
+            html = tempDiv.innerHTML;
+            console.log('[WorkMode] 已移除所有 p 标签');
           }
 
           // Split by <br>
@@ -717,20 +735,18 @@
           console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
           let html = newContent.innerHTML;
 
-          // Check if we need to exclude content after a specific element
+          // Check if we need to exclude content after a specific ID
           if (config.content.excludeAfterId) {
             const excludeElement = newContent.querySelector('#' + config.content.excludeAfterId);
             if (excludeElement) {
-              console.log('[WorkMode] 新章节排除元素之后的内容:', config.content.excludeAfterId);
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const excludeEl = tempDiv.querySelector('#' + config.content.excludeAfterId);
-              if (excludeEl) {
-                let current = excludeEl;
-                while (current) {
-                  const next = current.nextSibling;
-                  current.remove();
-                  current = next;
+              console.log('[WorkMode] 新章节在容器内找到排除元素:', config.content.excludeAfterId);
+              const children = Array.from(newContent.children);
+              const excludeIndex = children.indexOf(excludeElement);
+              if (excludeIndex >= 0) {
+                console.log('[WorkMode] 新章节排除元素位置:', excludeIndex);
+                const tempDiv = document.createElement('div');
+                for (let i = 0; i < excludeIndex; i++) {
+                  tempDiv.appendChild(newContent.children[i].cloneNode(true));
                 }
                 html = tempDiv.innerHTML;
               }
@@ -740,18 +756,36 @@
           // Check if we need to exclude content after specific text
           if (config.content.excludeAfterText) {
             console.log('[WorkMode] 新章节查找排除文本:', config.content.excludeAfterText);
-            for (let i = 0; i < newContent.children.length; i++) {
-              const child = newContent.children[i];
-              if (child.textContent.includes(config.content.excludeAfterText)) {
-                console.log('[WorkMode] 新章节找到排除文本元素，截取到第', i, '个子元素');
-                const tempDiv = document.createElement('div');
-                for (let j = 0; j < i; j++) {
-                  tempDiv.appendChild(newContent.children[j].cloneNode(true));
-                }
-                html = tempDiv.innerHTML;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const children = Array.from(tempDiv.children);
+            let foundIndex = -1;
+
+            for (let i = 0; i < children.length; i++) {
+              if (children[i].textContent.includes(config.content.excludeAfterText)) {
+                foundIndex = i;
                 break;
               }
             }
+
+            if (foundIndex >= 0) {
+              console.log('[WorkMode] 新章节找到排除文本元素，位置:', foundIndex);
+              const newDiv = document.createElement('div');
+              for (let i = 0; i < foundIndex; i++) {
+                newDiv.appendChild(children[i].cloneNode(true));
+              }
+              html = newDiv.innerHTML;
+            }
+          }
+
+          // Remove p tags if configured
+          if (config.content.removeEmptyTags || config.content.excludePTags) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const pTags = tempDiv.querySelectorAll('p');
+            pTags.forEach(p => p.remove());
+            html = tempDiv.innerHTML;
+            console.log('[WorkMode] 新章节已移除所有 p 标签');
           }
 
           const parts = html.split(/<br\s*\/?>/i);
@@ -885,20 +919,18 @@
           console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
           let html = newContent.innerHTML;
 
-          // Check if we need to exclude content after a specific element
+          // Check if we need to exclude content after a specific ID
           if (config.content.excludeAfterId) {
             const excludeElement = newContent.querySelector('#' + config.content.excludeAfterId);
             if (excludeElement) {
-              console.log('[WorkMode] 新章节排除元素之后的内容:', config.content.excludeAfterId);
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const excludeEl = tempDiv.querySelector('#' + config.content.excludeAfterId);
-              if (excludeEl) {
-                let current = excludeEl;
-                while (current) {
-                  const next = current.nextSibling;
-                  current.remove();
-                  current = next;
+              console.log('[WorkMode] 新章节在容器内找到排除元素:', config.content.excludeAfterId);
+              const children = Array.from(newContent.children);
+              const excludeIndex = children.indexOf(excludeElement);
+              if (excludeIndex >= 0) {
+                console.log('[WorkMode] 新章节排除元素位置:', excludeIndex);
+                const tempDiv = document.createElement('div');
+                for (let i = 0; i < excludeIndex; i++) {
+                  tempDiv.appendChild(newContent.children[i].cloneNode(true));
                 }
                 html = tempDiv.innerHTML;
               }
@@ -908,18 +940,36 @@
           // Check if we need to exclude content after specific text
           if (config.content.excludeAfterText) {
             console.log('[WorkMode] 新章节查找排除文本:', config.content.excludeAfterText);
-            for (let i = 0; i < newContent.children.length; i++) {
-              const child = newContent.children[i];
-              if (child.textContent.includes(config.content.excludeAfterText)) {
-                console.log('[WorkMode] 新章节找到排除文本元素，截取到第', i, '个子元素');
-                const tempDiv = document.createElement('div');
-                for (let j = 0; j < i; j++) {
-                  tempDiv.appendChild(newContent.children[j].cloneNode(true));
-                }
-                html = tempDiv.innerHTML;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const children = Array.from(tempDiv.children);
+            let foundIndex = -1;
+
+            for (let i = 0; i < children.length; i++) {
+              if (children[i].textContent.includes(config.content.excludeAfterText)) {
+                foundIndex = i;
                 break;
               }
             }
+
+            if (foundIndex >= 0) {
+              console.log('[WorkMode] 新章节找到排除文本元素，位置:', foundIndex);
+              const newDiv = document.createElement('div');
+              for (let i = 0; i < foundIndex; i++) {
+                newDiv.appendChild(children[i].cloneNode(true));
+              }
+              html = newDiv.innerHTML;
+            }
+          }
+
+          // Remove p tags if configured
+          if (config.content.removeEmptyTags || config.content.excludePTags) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const pTags = tempDiv.querySelectorAll('p');
+            pTags.forEach(p => p.remove());
+            html = tempDiv.innerHTML;
+            console.log('[WorkMode] 新章节已移除所有 p 标签');
           }
 
           const parts = html.split(/<br\s*\/?>/i);

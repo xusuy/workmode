@@ -2,9 +2,11 @@
   "domains": ["jjwxc.net", "m.jjwxc.net", "www.jjwxc.net"],
   "name": "晋江文学城",
   "content": {
-    "selector": "#oneboolt, .noveltext",
+    "selector": "#oneboolt",
     "useBrSeparator": true,
+    "excludeAfterId": "favoriteshow_3",
     "excludeAfterText": "作 者 推 文",
+    "removeEmptyTags": true,
     "minParagraphCount": 10,
     "minParagraphLength": 1
   },
