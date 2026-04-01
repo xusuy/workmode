@@ -192,17 +192,45 @@
     if (config?.content?.selector) {
       const container = document.querySelector(config.content.selector);
       if (container) {
-        const paragraphSelector = config.content.paragraphSelector || 'p';
-        const allPTags = container.querySelectorAll(paragraphSelector);
-        const minParagraphLength = config.content.minParagraphLength || 1;
-        const minParagraphCount = config.content.minParagraphCount || 10;
+        // Check if using <br> separator (like JJWXC)
+        if (config.content.useBrSeparator) {
+          console.log('[WorkMode] 使用 <br> 分割模式提取内容');
+          const minParagraphLength = config.content.minParagraphLength || 1;
+          const minParagraphCount = config.content.minParagraphCount || 10;
 
-        const validParagraphs = Array.from(allPTags).filter(p => {
-          const text = p.textContent.trim();
-          return text.length >= minParagraphLength && !hasExcludeKeyword(text);
-        });
-        if (validParagraphs.length >= minParagraphCount) {
-          return validParagraphs;
+          // Get container's HTML and split by <br>
+          const html = container.innerHTML;
+          const parts = html.split(/<br\s*\/?>/i);
+
+          // Create virtual paragraph elements
+          const paragraphs = parts.map((part, index) => {
+            const p = document.createElement('p');
+            p.innerHTML = part.trim();
+            p.dataset.brIndex = index; // Mark as br-separated
+            return p;
+          }).filter(p => {
+            const text = p.textContent.trim();
+            return text.length >= minParagraphLength && !hasExcludeKeyword(text);
+          });
+
+          console.log('[WorkMode] <br> 分割提取到', paragraphs.length, '个段落');
+          if (paragraphs.length >= minParagraphCount) {
+            return paragraphs;
+          }
+        } else {
+          // Original paragraph selector mode
+          const paragraphSelector = config.content.paragraphSelector || 'p';
+          const allPTags = container.querySelectorAll(paragraphSelector);
+          const minParagraphLength = config.content.minParagraphLength || 1;
+          const minParagraphCount = config.content.minParagraphCount || 10;
+
+          const validParagraphs = Array.from(allPTags).filter(p => {
+            const text = p.textContent.trim();
+            return text.length >= minParagraphLength && !hasExcludeKeyword(text);
+          });
+          if (validParagraphs.length >= minParagraphCount) {
+            return validParagraphs;
+          }
         }
       }
     }
@@ -636,8 +664,30 @@
           }
         }
 
-        const paragraphSelector = config?.content?.paragraphSelector || 'p';
-        const newParagraphs = Array.from(newContent.querySelectorAll(paragraphSelector));
+        // Extract paragraphs based on config
+        let newParagraphs = [];
+
+        if (config?.content?.useBrSeparator) {
+          // Use <br> separator mode (for JJWXC, etc.)
+          console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
+          const html = newContent.innerHTML;
+          const parts = html.split(/<br\s*\/?>/i);
+
+          newParagraphs = parts.map((part, index) => {
+            const p = document.createElement('p');
+            p.innerHTML = part.trim();
+            p.dataset.brIndex = index;
+            return p;
+          }).filter(p => {
+            const text = p.textContent.trim();
+            return text.length >= 1;
+          });
+        } else {
+          // Original paragraph selector mode
+          const paragraphSelector = config?.content?.paragraphSelector || 'p';
+          newParagraphs = Array.from(newContent.querySelectorAll(paragraphSelector));
+        }
+
         console.log('[WorkMode] 最终提取到', newParagraphs.length, '个段落');
 
         // 显示前3段内容预览（用于诊断）
@@ -745,8 +795,29 @@
         console.log('[WorkMode] 新内容已加载');
 
         // 提取新章节内容
-        const paragraphSelector = config?.content?.paragraphSelector || 'p';
-        const newParagraphs = Array.from(newContent.querySelectorAll(paragraphSelector));
+        let newParagraphs = [];
+
+        if (config?.content?.useBrSeparator) {
+          // Use <br> separator mode
+          console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
+          const html = newContent.innerHTML;
+          const parts = html.split(/<br\s*\/?>/i);
+
+          newParagraphs = parts.map((part, index) => {
+            const p = document.createElement('p');
+            p.innerHTML = part.trim();
+            p.dataset.brIndex = index;
+            return p;
+          }).filter(p => {
+            const text = p.textContent.trim();
+            return text.length >= 1;
+          });
+        } else {
+          // Original paragraph selector mode
+          const paragraphSelector = config?.content?.paragraphSelector || 'p';
+          newParagraphs = Array.from(newContent.querySelectorAll(paragraphSelector));
+        }
+
         console.log('[WorkMode] 提取到', newParagraphs.length, '个段落');
 
         const chapterTitle = extractChapterTitleFromDoc(document);

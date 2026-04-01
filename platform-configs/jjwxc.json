@@ -3,7 +3,7 @@
   "name": "晋江文学城",
   "content": {
     "selector": "#oneboolt .noveltext, #content .noveltext, .noveltext",
-    "paragraphSelector": "p",
+    "useBrSeparator": true,
     "minParagraphCount": 10,
     "minParagraphLength": 1
   },
