@@ -198,8 +198,33 @@
           const minParagraphLength = config.content.minParagraphLength || 1;
           const minParagraphCount = config.content.minParagraphCount || 10;
 
-          // Get container's HTML and split by <br>
-          const html = container.innerHTML;
+          // Get content HTML, optionally excluding after a certain element
+          let html = container.innerHTML;
+
+          // Check if we need to exclude content after a specific element
+          if (config.content.excludeAfterId) {
+            const excludeElement = container.querySelector('#' + config.content.excludeAfterId);
+            if (excludeElement) {
+              console.log('[WorkMode] 排除元素之后的内容:', config.content.excludeAfterId);
+              // Clone the container and remove the exclude element and everything after
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = html;
+              const excludeEl = tempDiv.querySelector('#' + config.content.excludeAfterId);
+              if (excludeEl) {
+                // Remove the element and all following siblings
+                let current = excludeEl;
+                while (current) {
+                  const next = current.nextSibling;
+                  current.remove();
+                  current = next;
+                }
+                html = tempDiv.innerHTML;
+                console.log('[WorkMode] 已排除指定元素之后的内容');
+              }
+            }
+          }
+
+          // Split by <br>
           const parts = html.split(/<br\s*\/?>/i);
 
           // Create virtual paragraph elements
@@ -670,7 +695,28 @@
         if (config?.content?.useBrSeparator) {
           // Use <br> separator mode (for JJWXC, etc.)
           console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
-          const html = newContent.innerHTML;
+          let html = newContent.innerHTML;
+
+          // Check if we need to exclude content after a specific element
+          if (config.content.excludeAfterId) {
+            const excludeElement = newContent.querySelector('#' + config.content.excludeAfterId);
+            if (excludeElement) {
+              console.log('[WorkMode] 新章节排除元素之后的内容:', config.content.excludeAfterId);
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = html;
+              const excludeEl = tempDiv.querySelector('#' + config.content.excludeAfterId);
+              if (excludeEl) {
+                let current = excludeEl;
+                while (current) {
+                  const next = current.nextSibling;
+                  current.remove();
+                  current = next;
+                }
+                html = tempDiv.innerHTML;
+              }
+            }
+          }
+
           const parts = html.split(/<br\s*\/?>/i);
 
           newParagraphs = parts.map((part, index) => {
@@ -800,7 +846,28 @@
         if (config?.content?.useBrSeparator) {
           // Use <br> separator mode
           console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
-          const html = newContent.innerHTML;
+          let html = newContent.innerHTML;
+
+          // Check if we need to exclude content after a specific element
+          if (config.content.excludeAfterId) {
+            const excludeElement = newContent.querySelector('#' + config.content.excludeAfterId);
+            if (excludeElement) {
+              console.log('[WorkMode] 新章节排除元素之后的内容:', config.content.excludeAfterId);
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = html;
+              const excludeEl = tempDiv.querySelector('#' + config.content.excludeAfterId);
+              if (excludeEl) {
+                let current = excludeEl;
+                while (current) {
+                  const next = current.nextSibling;
+                  current.remove();
+                  current = next;
+                }
+                html = tempDiv.innerHTML;
+              }
+            }
+          }
+
           const parts = html.split(/<br\s*\/?>/i);
 
           newParagraphs = parts.map((part, index) => {

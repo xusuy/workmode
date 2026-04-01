@@ -4,6 +4,7 @@
   "content": {
     "selector": "#oneboolt, .noveltext",
     "useBrSeparator": true,
+    "excludeAfterId": "favoriteshow_3",
     "minParagraphCount": 10,
     "minParagraphLength": 1
   },
