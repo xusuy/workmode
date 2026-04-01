@@ -2,7 +2,7 @@
   "domains": ["jjwxc.net", "m.jjwxc.net", "www.jjwxc.net"],
   "name": "晋江文学城",
   "content": {
-    "selector": "#oneboolt .noveltext, #content .noveltext, .noveltext",
+    "selector": "#oneboolt, .noveltext",
     "useBrSeparator": true,
     "minParagraphCount": 10,
     "minParagraphLength": 1
@@ -12,7 +12,7 @@
     "method": "click",
     "buttonSelector": "a",
     "buttonText": "下一章",
-    "contentSelector": "#oneboolt .noveltext, #content .noveltext, .noveltext",
+    "contentSelector": "#oneboolt, .noveltext",
     "loadDelay": 500,
     "verificationDelay": 100
   },
