@@ -866,6 +866,17 @@
             });
           }
 
+          // 1.5. Exclude specific elements by class
+          if (config.content.excludeElementClasses && Array.isArray(config.content.excludeElementClasses)) {
+            config.content.excludeElementClasses.forEach(cls => {
+              const elements = tempDiv.querySelectorAll('.' + cls);
+              if (elements.length > 0) {
+                console.log('[WorkMode] 新章节移除', elements.length, '个', '.' + cls, '元素');
+                elements.forEach(el => el.remove());
+              }
+            });
+          }
+
           // 2. Exclude content after specific text
           if (config.content.excludeAfterText) {
             console.log('[WorkMode] 新章节查找排除文本:', config.content.excludeAfterText);
@@ -1046,6 +1057,17 @@
               if (el) {
                 console.log('[WorkMode] 新章节移除元素:', '#' + id);
                 el.remove();
+              }
+            });
+          }
+
+          // 1.5. Exclude specific elements by class
+          if (config.content.excludeElementClasses && Array.isArray(config.content.excludeElementClasses)) {
+            config.content.excludeElementClasses.forEach(cls => {
+              const elements = tempDiv.querySelectorAll('.' + cls);
+              if (elements.length > 0) {
+                console.log('[WorkMode] 新章节移除', elements.length, '个', '.' + cls, '元素');
+                elements.forEach(el => el.remove());
               }
             });
           }
