@@ -40,6 +40,14 @@
   }
 
   async function createOverlay() {
+    // 重置章节状态 - 每次重新激活 WorkMode 时都从当前页面开始
+    chapterState.loadedChapters = [];
+    chapterState.isLoading = false;
+    chapterState.lastFetchedHtml = null;
+    chapterState.lastFetchedUrl = null;  // 重要：清除旧的URL，使用当前页面
+    chapterState.lastFetchedDoc = null;
+    console.log('[WorkMode] 章节状态已重置，从当前页面开始');
+
     // 等待配置加载完成
     if (window.WorkModeConfigLoader && !window.WorkModeConfigLoader.ready) {
       console.log('[WorkMode] 等待配置加载...');
