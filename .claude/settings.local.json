@@ -4,7 +4,10 @@
       "Bash(git init:*)",
       "Bash(.gitignore:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node:*)",
+      "Bash(cd:*)",
+      "Bash(grep -v \"^\\\\.$\\\\|^\\\\.\\\\.$\\\\|node_modules\\\\|\\\\.git\\\\|dist\\\\|docs\\\\|platform-configs\")"
     ]
   }
 }

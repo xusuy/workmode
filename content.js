@@ -4,7 +4,6 @@
 (function() {
   'use strict';
 
-  console.log('[WorkMode] Script loaded successfully');
 
   let isActive = false;
   let overlay = null;
@@ -40,19 +39,19 @@
   }
 
   async function createOverlay() {
+    // 获取配置
+    const config = window.WorkModeConfigLoader?.getConfig();
+
     // 重置章节状态 - 每次重新激活 WorkMode 时都从当前页面开始
     chapterState.loadedChapters = [];
     chapterState.isLoading = false;
     chapterState.lastFetchedHtml = null;
     chapterState.lastFetchedUrl = null;  // 重要：清除旧的URL，使用当前页面
     chapterState.lastFetchedDoc = null;
-    console.log('[WorkMode] 章节状态已重置，从当前页面开始');
 
     // 等待配置加载完成
     if (window.WorkModeConfigLoader && !window.WorkModeConfigLoader.ready) {
-      console.log('[WorkMode] 等待配置加载...');
       await window.WorkModeConfigLoader.waitForReady();
-      console.log('[WorkMode] 配置加载完成');
     }
 
     if (overlay) {
@@ -62,6 +61,9 @@
     overlay = document.createElement('div');
     overlay.id = 'wps-overlay';
     overlay.className = 'active';
+
+    // 隐藏原页面的滚动条
+    document.body.style.overflow = 'hidden';
 
     // Toolbar
     const toolbar = document.createElement('div');
@@ -88,20 +90,6 @@
     docTitle.id = 'wps-doc-title';
     docTitle.textContent = '[兼容模式] 文档1.docx';
     toolbar.appendChild(docTitle);
-
-    // 为晋江添加工具栏中的"加载下一章"按钮
-    const config = window.WorkModeConfigLoader?.getConfig();
-    if (config?.name === '晋江文学城') {
-      const nextChapterBtn = document.createElement('button');
-      nextChapterBtn.id = 'wps-next-chapter-btn';
-      nextChapterBtn.textContent = '加载下一章';
-      nextChapterBtn.style.cssText = 'margin-left: 20px; padding: 6px 16px; font-size: 14px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 4px;';
-      nextChapterBtn.addEventListener('click', () => {
-        loadNextChapter();
-      });
-      toolbar.appendChild(nextChapterBtn);
-      console.log('[WorkMode] 已为晋江添加工具栏按钮');
-    }
 
     // Paper container
     const paper = document.createElement('div');
@@ -166,15 +154,13 @@
     document.body.appendChild(overlay);
 
     // "加载下一章"按钮 - 必须在 appendChild 之后创建
-    const buttonSelector = config?.nextChapter?.buttonSelector || 'button';
-    const buttonText = config?.nextChapter?.buttonText || '下一章';
-    const hasNextChapter = Array.from(document.querySelectorAll(buttonSelector)).some(btn =>
-      btn.textContent.includes(buttonText)
-    );
+    // 检查配置是否支持下一章功能，或者直接检测晋江域名
+    const hostname = window.location.hostname;
+    const isJJWXC = hostname.includes('jjwxc.net');
+    const supportsNextChapter = config?.nextChapter?.supported === true || isJJWXC;
 
-    if (hasNextChapter) {
+    if (supportsNextChapter) {
       createLoadNextButton();
-      console.log('[WorkMode] 已显示"加载下一章"按钮');
     }
   }
 
@@ -196,6 +182,8 @@
     if (overlay) {
       overlay.remove();
       overlay = null;
+      // 恢复原页面的滚动条
+      document.body.style.overflow = '';
     }
   }
 
@@ -217,7 +205,6 @@
       if (container) {
         // Check if using <br> separator (like JJWXC)
         if (config.content.useBrSeparator) {
-          console.log('[WorkMode] 使用 <br> 分割模式提取内容');
           const minParagraphLength = config.content.minParagraphLength || 1;
           const minParagraphCount = config.content.minParagraphCount || 10;
 
@@ -226,10 +213,8 @@
           if (config.content.useFirstOfClass) {
             const firstElement = container.querySelector('.' + config.content.useFirstOfClass);
             if (firstElement) {
-              console.log('[WorkMode] 只使用第一个', '.' + config.content.useFirstOfClass, '元素');
               contentContainer = firstElement;
             } else {
-              console.log('[WorkMode] 未找到', '.' + config.content.useFirstOfClass, '元素，使用整个容器');
             }
           }
 
@@ -245,7 +230,6 @@
             config.content.excludeElementIds.forEach(id => {
               const el = tempDiv.querySelector('#' + id);
               if (el) {
-                console.log('[WorkMode] 移除元素:', '#' + id);
                 el.remove();
               }
             });
@@ -256,7 +240,6 @@
             config.content.excludeElementClasses.forEach(cls => {
               const elements = tempDiv.querySelectorAll('.' + cls);
               if (elements.length > 0) {
-                console.log('[WorkMode] 移除', elements.length, '个', '.' + cls, '元素');
                 elements.forEach(el => el.remove());
               }
             });
@@ -264,7 +247,6 @@
 
           // 2. Exclude content after specific text
           if (config.content.excludeAfterText) {
-            console.log('[WorkMode] 查找排除文本:', config.content.excludeAfterText);
             const children = Array.from(tempDiv.children);
             let foundIndex = -1;
 
@@ -276,7 +258,6 @@
             }
 
             if (foundIndex >= 0) {
-              console.log('[WorkMode] 找到排除文本元素，位置:', foundIndex);
               // Remove elements from foundIndex onwards
               for (let i = tempDiv.children.length - 1; i >= foundIndex; i--) {
                 tempDiv.children[i].remove();
@@ -289,7 +270,6 @@
             config.content.excludeTags.forEach(tag => {
               const tags = tempDiv.querySelectorAll(tag);
               if (tags.length > 0) {
-                console.log('[WorkMode] 移除', tags.length, '个', tag, '标签');
                 tags.forEach(t => t.remove());
               }
             });
@@ -306,12 +286,16 @@
             p.innerHTML = part.trim();
             p.dataset.brIndex = index; // Mark as br-separated
             return p;
-          }).filter(p => {
+          }).filter((p, index) => {
             const text = p.textContent.trim();
+            // 跳过看起来像纯标题的短段落（没有章节号）
+            // JJWXC 的第一个段落通常是纯标题，如"说好的同伴爱呢"
+            if (index === 0 && text.length < 50 && !/^第\d+章/.test(text) && !text.includes('，')) {
+              return false;
+            }
             return text.length >= minParagraphLength && !hasExcludeKeyword(text);
           });
 
-          console.log('[WorkMode] <br> 分割提取到', paragraphs.length, '个段落');
           if (paragraphs.length >= minParagraphCount) {
             return paragraphs;
           }
@@ -400,13 +384,11 @@
       const titleElement = doc.querySelector('title');
       if (titleElement) {
         const titleText = titleElement.textContent.trim();
-        console.log('[WorkMode] 页面 title:', titleText);
 
         // 起点格式: "第1章 牛顿的感谢 _《书名》小说在线阅读 - 起点中文网"
         const qidianMatch = titleText.match(/^(第\d+章\s+[^_《]+?)(?=_|《|$)/);
         if (qidianMatch) {
           const title = qidianMatch[1].trim();
-          console.log('[WorkMode] 从 title 提取起点标题:', title);
           return title;
         }
 
@@ -414,7 +396,6 @@
         const jjwxcMatch = titleText.match(/^(第[零一二三四五六七八九十百千0-9]+章\s+[^_]+)/);
         if (jjwxcMatch) {
           const title = jjwxcMatch[1].trim();
-          console.log('[WorkMode] 从 title 提取晋江标题:', title);
           return title;
         }
 
@@ -422,14 +403,12 @@
         const fanqieMatch = titleText.match(/(第\d+章\s+.*?)(?=在线|免费|阅读|_|$)/);
         if (fanqieMatch) {
           const title = fanqieMatch[1].trim();
-          console.log('[WorkMode] 从 title 提取番茄标题:', title);
           return title;
         }
 
         // 如果上面都失败，尝试简单匹配
         const simpleMatch = titleText.match(/(第[零一二三四五六七八九十百千0-9]+章\s+[\u4e00-\u9fa5]+)/);
         if (simpleMatch) {
-          console.log('[WorkMode] 简单匹配标题:', simpleMatch[1]);
           return simpleMatch[1];
         }
       }
@@ -451,10 +430,8 @@
                 titleText = titleText.substring(0, 50);
               }
             }
-            console.log('[WorkMode] 从平台选择器提取标题:', titleSelector, '->', titleText);
             return titleText;
           } else {
-            console.log('[WorkMode] 平台选择器不包含章节格式，跳过');
           }
         }
       }
@@ -474,10 +451,8 @@
               titleText = titleText.substring(0, 30);
             }
           }
-          console.log('[WorkMode] 从 h1 提取标题:', titleText);
           return titleText;
         } else {
-          console.log('[WorkMode] h1 不包含章节格式，可能是书名');
         }
       }
 
@@ -492,12 +467,10 @@
         const metaElement = doc.querySelector(selector);
         if (metaElement && (metaElement.content || metaElement.value)) {
           const metaText = (metaElement.content || metaElement.value).trim();
-          console.log('[WorkMode] 检查 meta', selector, ':', metaText);
 
           // 从 meta 内容中提取章节名
           const chapterMatch = metaText.match(/第\d+章\s+[^,_\s]{1,30}/);
           if (chapterMatch) {
-            console.log('[WorkMode] 从 meta 提取标题:', chapterMatch[0]);
             return chapterMatch[0];
           }
         }
@@ -514,7 +487,6 @@
         if (title.length > 30) {
           title = title.substring(0, 30);
         }
-        console.log('[WorkMode] 从正则提取标题:', match[1], title);
         return format
           .replace('{chapter}', match[1])
           .replace('{title}', title);
@@ -646,7 +618,6 @@
     updateLoadButtonState('loading');
 
     try {
-      console.log('[WorkMode] 开始加载下一章...');
 
       const method = config?.nextChapter?.method || 'click';
       const buttonSelector = config?.nextChapter?.buttonSelector || 'button';
@@ -656,18 +627,15 @@
 
       if (method === 'fetch') {
         // MPA 模式：使用 fetch 获取下一页内容
-        console.log('[WorkMode] 使用 MPA fetch 模式');
 
         let nextUrl;
 
         // 检查是否配置了 URL 参数递增模式（如晋江的 chapterid）
         const urlParam = config?.nextChapter?.urlParam;
         if (urlParam) {
-          console.log('[WorkMode] 使用 URL 参数递增模式:', urlParam);
 
           // 获取当前 URL（优先使用上次 fetch 的 URL）
           const currentUrl = chapterState.lastFetchedUrl || window.location.href;
-          console.log('[WorkMode] 当前 URL:', currentUrl);
 
           // 解析 URL，提取并递增参数
           const urlObj = new URL(currentUrl);
@@ -677,20 +645,15 @@
             const nextChapterId = parseInt(currentChapterId) + 1;
             urlObj.searchParams.set(urlParam, nextChapterId.toString());
             nextUrl = urlObj.href;
-            console.log('[WorkMode]', urlParam, ':', currentChapterId, '->', nextChapterId);
-            console.log('[WorkMode] 构造的下一章 URL:', nextUrl);
           } else {
             throw new Error('URL 中未找到参数: ' + urlParam);
           }
         } else {
           // 传统模式：从页面查找"下一章"链接
-          console.log('[WorkMode] 使用链接查找模式');
 
           // 确定从哪个文档查找"下一章"链接
           const sourceDoc = chapterState.lastFetchedDoc || document;
-          console.log('[WorkMode] 查找链接的来源:', chapterState.lastFetchedUrl ? '上次加载的章节' : '当前页面');
           if (chapterState.lastFetchedUrl) {
-            console.log('[WorkMode] 上次加载的URL:', chapterState.lastFetchedUrl);
           }
 
           // 找到"下一章"链接
@@ -709,11 +672,8 @@
           }
 
           nextUrl = nextButton.href;
-          console.log('[WorkMode] 找到链接:', nextButton.textContent.trim(), '->', nextUrl);
         }
 
-        console.log('[WorkMode] === 下一章 URL ===');
-        console.log('[WorkMode] URL:', nextUrl);
 
         if (!nextUrl) {
           throw new Error('无法获取下一章 URL');
@@ -721,7 +681,6 @@
 
         // 检查是否重复加载
         if (chapterState.loadedChapters.includes(nextUrl)) {
-          console.log('[WorkMode] ⚠️ 警告：这个章节已经加载过了');
           throw new Error('下一章已加载，可能已到最后一章');
         }
 
@@ -737,7 +696,6 @@
 
         // 检查响应头中的编码
         const contentType = response.headers.get('content-type');
-        console.log('[WorkMode] Content-Type:', contentType);
 
         // 尝试从 HTML 中检测编码
         const decoder = new TextDecoder('utf-8');
@@ -748,36 +706,29 @@
         const charsetMatch = preview.match(/charset=["']?([^"'\s>]+)/i);
         if (charsetMatch) {
           charset = charsetMatch[1].toLowerCase();
-          console.log('[WorkMode] 检测到 charset:', charset);
         }
 
         // 根据 charset 选择解码器
         if (charset === 'gbk' || charset === 'gb2312' || charset === 'gb18030') {
-          console.log('[WorkMode] 使用 GBK 编码');
           try {
             const gbkDecoder = new TextDecoder('gbk');
             html = gbkDecoder.decode(buffer);
           } catch (e) {
-            console.log('[WorkMode] GBK 解码器不支持，尝试 UTF-8');
             html = decoder.decode(buffer);
           }
         } else {
-          console.log('[WorkMode] 使用', charset, '编码');
           html = decoder.decode(buffer);
         }
 
         const parser = new DOMParser();
         const newDoc = parser.parseFromString(html, 'text/html');
 
-        console.log('[WorkMode] HTML 解析成功，长度:', html.length);
-        console.log('[WorkMode] 尝试选择器:', contentSelector);
 
         // 从新页面提取内容 - 支持多种选择器回退
         let newContent = newDoc.querySelector(contentSelector);
 
         // 如果主选择器失败，尝试备用选择器
         if (!newContent) {
-          console.log('[WorkMode] 主选择器失败，尝试备用选择器...');
           const fallbackSelectors = [
             '.content',
             '.read-content',
@@ -795,10 +746,8 @@
             if (el) {
               const pCount = el.querySelectorAll('p').length;
               const textLen = el.textContent.trim().length;
-              console.log(`[WorkMode] ${sel}: ${pCount}段, ${textLen}字符`);
               if (pCount >= 5 && textLen > 200) {
                 newContent = el;
-                console.log('[WorkMode] 使用选择器:', sel);
                 break;
               }
             }
@@ -807,7 +756,6 @@
 
         if (!newContent) {
           // 最后尝试：直接查找所有段落，找最可能的容器
-          console.log('[WorkMode] 选择器都失败，尝试查找文本最丰富的容器...');
           const allDivs = newDoc.querySelectorAll('div');
           let bestContainer = null;
           let maxPCount = 0;
@@ -825,7 +773,6 @@
 
           if (bestContainer) {
             newContent = bestContainer;
-            console.log('[WorkMode] 找到最佳容器:', maxPCount, '个段落');
           } else {
             throw new Error('无法在页面中找到内容区域，可能页面结构已更改或需要登录');
           }
@@ -836,14 +783,12 @@
 
         if (config?.content?.useBrSeparator) {
           // Use <br> separator mode (for JJWXC, etc.)
-          console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
 
           // Check if we should only use the first element of a specific class
           let contentContainer = newContent;
           if (config.content.useFirstOfClass) {
             const firstElement = newContent.querySelector('.' + config.content.useFirstOfClass);
             if (firstElement) {
-              console.log('[WorkMode] 新章节只使用第一个', '.' + config.content.useFirstOfClass, '元素');
               contentContainer = firstElement;
             }
           }
@@ -860,7 +805,6 @@
             config.content.excludeElementIds.forEach(id => {
               const el = tempDiv.querySelector('#' + id);
               if (el) {
-                console.log('[WorkMode] 新章节移除元素:', '#' + id);
                 el.remove();
               }
             });
@@ -871,7 +815,6 @@
             config.content.excludeElementClasses.forEach(cls => {
               const elements = tempDiv.querySelectorAll('.' + cls);
               if (elements.length > 0) {
-                console.log('[WorkMode] 新章节移除', elements.length, '个', '.' + cls, '元素');
                 elements.forEach(el => el.remove());
               }
             });
@@ -879,7 +822,6 @@
 
           // 2. Exclude content after specific text
           if (config.content.excludeAfterText) {
-            console.log('[WorkMode] 新章节查找排除文本:', config.content.excludeAfterText);
             const children = Array.from(tempDiv.children);
             let foundIndex = -1;
 
@@ -891,7 +833,6 @@
             }
 
             if (foundIndex >= 0) {
-              console.log('[WorkMode] 新章节找到排除文本元素，位置:', foundIndex);
               for (let i = tempDiv.children.length - 1; i >= foundIndex; i--) {
                 tempDiv.children[i].remove();
               }
@@ -903,10 +844,28 @@
             config.content.excludeTags.forEach(tag => {
               const tags = tempDiv.querySelectorAll(tag);
               if (tags.length > 0) {
-                console.log('[WorkMode] 新章节移除', tags.length, '个', tag, '标签');
                 tags.forEach(t => t.remove());
               }
             });
+          }
+
+          // 3.5. Smart link handling: Remove all <a> tags except "next chapter" links
+          const allLinks = tempDiv.querySelectorAll('a');
+          let removedCount = 0;
+          allLinks.forEach(link => {
+            const href = link.getAttribute('href') || '';
+            const text = link.textContent.trim();
+            // Keep only links that look like "next chapter" links
+            const isNextChapterLink = href.includes('nextchapter') ||
+                                     href.includes('next') ||
+                                     text.includes('下一章') ||
+                                     text.includes('下页');
+            if (!isNextChapterLink) {
+              link.remove();
+              removedCount++;
+            }
+          });
+          if (removedCount > 0) {
           }
 
           html = tempDiv.innerHTML;
@@ -918,8 +877,12 @@
             p.innerHTML = part.trim();
             p.dataset.brIndex = index;
             return p;
-          }).filter(p => {
+          }).filter((p, index) => {
             const text = p.textContent.trim();
+            // 跳过看起来像纯标题的短段落（没有章节号）
+            if (index === 0 && text.length < 50 && !/^第\d+章/.test(text) && !text.includes('，')) {
+              return false;
+            }
             return text.length >= 1;
           });
         } else {
@@ -928,13 +891,10 @@
           newParagraphs = Array.from(newContent.querySelectorAll(paragraphSelector));
         }
 
-        console.log('[WorkMode] 最终提取到', newParagraphs.length, '个段落');
 
         // 显示前3段内容预览（用于诊断）
-        console.log('[WorkMode] 新章节内容预览:');
         for (let i = 0; i < Math.min(3, newParagraphs.length); i++) {
           const text = newParagraphs[i].textContent.trim();
-          console.log('  段[' + i + ']:', text.substring(0, 60) + (text.length > 60 ? '...' : ''));
         }
 
         // 检查内容是否为空
@@ -951,7 +911,6 @@
           const newText = newContent.textContent.trim().substring(0, 500);
 
           if (currentText === newText || currentText.length > 0 && newText.includes(currentText)) {
-            console.log('[WorkMode] 检测到内容重复，可能已到最后一章');
             updateLoadButtonState('finished');
             showMessage('已到最后一章');
             chapterState.isLoading = false;
@@ -961,50 +920,29 @@
 
         // 提取章节标题
         const chapterTitle = extractChapterTitleFromDoc(newDoc);
-        console.log('[WorkMode] 提取的章节标题:', chapterTitle);
-        console.log('[WorkMode] 标题长度:', chapterTitle.length);
 
         // 检查标题是否异常长（可能包含了正文）
         if (chapterTitle.length > 100) {
-          console.log('[WorkMode] ⚠️ 警告：标题异常长，可能包含正文内容');
-          console.log('[WorkMode] 标题前100字符:', chapterTitle.substring(0, 100));
         }
 
         // 追加到界面
         appendChapterContent(chapterTitle, newParagraphs);
 
         chapterState.loadedChapters.push(nextUrl);
-        console.log('[WorkMode] 已加载章节:', chapterState.loadedChapters.length);
 
         // 保存最后一次 fetch 的信息，用于下一次查找"下一章"链接
         chapterState.lastFetchedUrl = nextUrl;
         chapterState.lastFetchedHtml = html;
         chapterState.lastFetchedDoc = newDoc;
-        console.log('[WorkMode] === 状态已保存 ===');
-        console.log('[WorkMode] lastFetchedUrl:', nextUrl);
-        console.log('[WorkMode] lastFetchedDoc 是否存在:', !!newDoc);
-        console.log('[WorkMode] 下次查找链接将使用此文档');
 
-        // 检查新页面是否还有"下一章"
-        const verificationDelay = config?.nextChapter?.verificationDelay || 100;
-        setTimeout(() => {
-          const stillHasNext = Array.from(newDoc.querySelectorAll(buttonSelector)).some(btn =>
-            btn.textContent.includes(buttonText)
-          );
-
-          if (stillHasNext) {
-            const oldButton = document.getElementById('wps-load-next-btn');
-            if (oldButton) oldButton.remove();
-            createLoadNextButton();
-          } else {
-            updateLoadButtonState('finished');
-            showMessage('已到最后一章');
-          }
-        }, verificationDelay);
+        // 移除旧按钮，创建新按钮
+        const oldButton = document.getElementById('wps-load-next-btn');
+        if (oldButton) oldButton.remove();
+        createLoadNextButton();
+        updateLoadButtonState('normal');
 
       } else {
         // SPA 模式：点击按钮，等待内容原地变化
-        console.log('[WorkMode] 使用 SPA click 模式');
 
         const nextButton = Array.from(document.querySelectorAll(buttonSelector)).find(btn =>
           btn.textContent.includes(buttonText)
@@ -1019,11 +957,9 @@
         const currentText = currentContent?.textContent || '';
 
         // 点击按钮
-        console.log('[WorkMode] 点击"' + buttonText + '"按钮');
         nextButton.click();
 
         // 等待新内容加载
-        console.log('[WorkMode] 等待新内容加载...');
         await waitForElement(contentSelector);
         await new Promise(resolve => setTimeout(resolve, loadDelay));
 
@@ -1035,14 +971,12 @@
           throw new Error('内容未变化，可能已到最后一章');
         }
 
-        console.log('[WorkMode] 新内容已加载');
 
         // 提取新章节内容
         let newParagraphs = [];
 
         if (config?.content?.useBrSeparator) {
           // Use <br> separator mode
-          console.log('[WorkMode] 新章节使用 <br> 分割模式提取');
           let html = newContent.innerHTML;
 
           // Check if we need to exclude content after a specific ID
@@ -1055,7 +989,6 @@
             config.content.excludeElementIds.forEach(id => {
               const el = tempDiv.querySelector('#' + id);
               if (el) {
-                console.log('[WorkMode] 新章节移除元素:', '#' + id);
                 el.remove();
               }
             });
@@ -1066,7 +999,6 @@
             config.content.excludeElementClasses.forEach(cls => {
               const elements = tempDiv.querySelectorAll('.' + cls);
               if (elements.length > 0) {
-                console.log('[WorkMode] 新章节移除', elements.length, '个', '.' + cls, '元素');
                 elements.forEach(el => el.remove());
               }
             });
@@ -1074,7 +1006,6 @@
 
           // 2. Exclude content after specific text
           if (config.content.excludeAfterText) {
-            console.log('[WorkMode] 新章节查找排除文本:', config.content.excludeAfterText);
             const children = Array.from(tempDiv.children);
             let foundIndex = -1;
 
@@ -1086,7 +1017,6 @@
             }
 
             if (foundIndex >= 0) {
-              console.log('[WorkMode] 新章节找到排除文本元素，位置:', foundIndex);
               for (let i = tempDiv.children.length - 1; i >= foundIndex; i--) {
                 tempDiv.children[i].remove();
               }
@@ -1098,10 +1028,28 @@
             config.content.excludeTags.forEach(tag => {
               const tags = tempDiv.querySelectorAll(tag);
               if (tags.length > 0) {
-                console.log('[WorkMode] 新章节移除', tags.length, '个', tag, '标签');
                 tags.forEach(t => t.remove());
               }
             });
+          }
+
+          // 3.5. Smart link handling: Remove all <a> tags except "next chapter" links
+          const allLinks = tempDiv.querySelectorAll('a');
+          let removedCount = 0;
+          allLinks.forEach(link => {
+            const href = link.getAttribute('href') || '';
+            const text = link.textContent.trim();
+            // Keep only links that look like "next chapter" links
+            const isNextChapterLink = href.includes('nextchapter') ||
+                                     href.includes('next') ||
+                                     text.includes('下一章') ||
+                                     text.includes('下页');
+            if (!isNextChapterLink) {
+              link.remove();
+              removedCount++;
+            }
+          });
+          if (removedCount > 0) {
           }
 
           html = tempDiv.innerHTML;
@@ -1113,8 +1061,12 @@
             p.innerHTML = part.trim();
             p.dataset.brIndex = index;
             return p;
-          }).filter(p => {
+          }).filter((p, index) => {
             const text = p.textContent.trim();
+            // 跳过看起来像纯标题的短段落（没有章节号）
+            if (index === 0 && text.length < 50 && !/^第\d+章/.test(text) && !text.includes('，')) {
+              return false;
+            }
             return text.length >= 1;
           });
         } else {
@@ -1123,7 +1075,6 @@
           newParagraphs = Array.from(newContent.querySelectorAll(paragraphSelector));
         }
 
-        console.log('[WorkMode] 提取到', newParagraphs.length, '个段落');
 
         const chapterTitle = extractChapterTitleFromDoc(document);
 
@@ -1131,7 +1082,6 @@
         appendChapterContent(chapterTitle, newParagraphs);
 
         chapterState.loadedChapters.push(window.location.href);
-        console.log('[WorkMode] 已加载章节:', chapterState.loadedChapters.length);
 
         // 检查是否还有下一章，并重新创建按钮
         const verificationDelay = config?.nextChapter?.verificationDelay || 100;

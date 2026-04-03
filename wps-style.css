@@ -11,6 +11,7 @@
   z-index: 2147483647;
   display: none;
   font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+  overflow: hidden;
 }
 
 /* Top toolbar - WPS blue */
