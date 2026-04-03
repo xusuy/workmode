@@ -6,7 +6,7 @@
     "useBrSeparator": true,
     "useFirstOfClass": "novelbody",
     "excludeElementIds": ["note_danmu_wrapper", "favoriteshow_3"],
-    "excludeElementClasses": ["noveltitle"],
+    "excludeElementClasses": ["noveltitle", "favorite_novel", "report_action", "showFavoritClassBtn"],
     "excludeAfterText": "作 者 推 文",
     "excludeTags": ["img", "p", "script", "font"],
     "minParagraphCount": 10,
