@@ -635,6 +635,12 @@
 
   // 加载下一章 - 支持 SPA 和 MPA 两种模式
   async function loadNextChapter() {
+    // 检查激活状态
+    if (!await WorkModeActivation.isActivated()) {
+      WorkModeActivation.showActivationDialog(false);
+      return;
+    }
+
     if (chapterState.isLoading) return;
 
     const config = window.WorkModeConfigLoader?.getConfig();
