@@ -95,6 +95,22 @@
     toolbar.appendChild(logo);
     toolbar.appendChild(menu);
 
+    // 添加用户 ID 显示
+    const userIdDisplay = document.createElement('div');
+    userIdDisplay.id = 'wps-user-id';
+    userIdDisplay.title = '点击复制用户 ID';
+
+    const userId = await WorkModeActivation.getUserId();
+    const shortId = userId.substring(0, 8) + '...';
+    userIdDisplay.textContent = `ID: ${shortId}`;
+
+    // 点击复制
+    userIdDisplay.addEventListener('click', () => {
+      WorkModeActivation.copyUserId();
+    });
+
+    toolbar.appendChild(userIdDisplay);
+
     const docTitle = document.createElement('div');
     docTitle.id = 'wps-doc-title';
     docTitle.textContent = '[兼容模式] 文档1.docx';
