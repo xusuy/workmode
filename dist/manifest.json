@@ -1,13 +1,19 @@
 {
   "manifest_version": 3,
   "name": "WorkMode",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "在公共场合伪装成 WPS 工作的浏览器扩展",
+  "permissions": ["storage"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["config-loader.js", "content.js"],
-      "css": ["wps-style.css"],
+      "js": [
+        "config-loader.js",
+        "activation/md5.js",
+        "activation/activation.js",
+        "content.js"
+      ],
+      "css": ["wps-style.css", "activation/activation.css"],
       "run_at": "document_end"
     }
   ],
