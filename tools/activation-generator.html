@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkMode 激活码生成器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 500px;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .result {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 24px;
+      display: none;
+      text-align: center;
+    }
+
+    .result.show {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .result-label {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .code-display {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      padding: 10px 24px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #5568d3;
+    }
+
+    .copy-btn.copied {
+      background: #10b981;
+    }
+
+    .info {
+      margin-top: 24px;
+      padding: 16px;
+      background: #fff3cd;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #856404;
+      line-height: 1.6;
+    }
+
+    .info strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>WorkMode 激活码生成器</h1>
+
+    <div class="input-group">
+      <label for="userId">用户 ID:</label>
+      <input
+        type="text"
+        id="userId"
+        placeholder="粘贴用户 ID"
+        autocomplete="off"
+      >
+    </div>
+
+    <button class="btn" onclick="generateCode()">生成激活码</button>
+
+    <div class="result" id="result">
+      <div class="result-label">激活码:</div>
+      <div class="code-display" id="code">--------</div>
+      <button class="copy-btn" id="copyBtn" onclick="copyCode()">复制</button>
+    </div>
+
+    <div class="info">
+      <strong>使用说明:</strong>
+      • 用户 ID 由用户从扩展工具栏复制给你<br>
+      • 输入后点击生成即可获得对应激活码<br>
+      • 将激活码发送给用户完成激活
+    </div>
+  </div>
+
+  <!-- 引入 MD5 库 -->
+  <script src="../dist/activation/md5.js"></script>
+
+  <script>
+    // 固定私钥（必须与 activation.js 中的相同）
+    const SECRET_SALT = "WorkMode_Pro_2026_Shadow";
+
+    function generateCode() {
+      const userId = document.getElementById('userId').value.trim();
+
+      if (!userId) {
+        alert('请输入用户 ID');
+        return;
+      }
+
+      if (typeof WorkModeMD5 !== 'function') {
+        alert('MD5 库未加载，请检查文件路径');
+        return;
+      }
+
+      // 计算激活码
+      const hash = WorkModeMD5(userId + SECRET_SALT);
+      const code = hash.substring(0, 8).toUpperCase();
+
+      // 显示结果
+      document.getElementById('code').textContent = code;
+      document.getElementById('result').classList.add('show');
+      document.getElementById('copyBtn').classList.remove('copied');
+      document.getElementById('copyBtn').textContent = '复制';
+    }
+
+    function copyCode() {
+      const code = document.getElementById('code').textContent;
+
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.classList.add('copied');
+        btn.textContent = '已复制';
+
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = '复制';
+        }, 2000);
+      }).catch(() => {
+        // 降级方案
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        const btn = document.getElementById('copyBtn');
+        btn.classList.add('copied');
+        btn.textContent = '已复制';
+      });
+    }
+
+    // 支持回车键生成
+    document.getElementById('userId').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        generateCode();
+      }
+    });
+  </script>
+</body>
+</html>
