@@ -141,6 +141,31 @@ WorkMode 使用 JSON 配置文件适配不同小说平台。
 }
 ```
 
+### 激活系统
+
+WorkMode 使用本地激活系统控制专业版功能访问。
+
+**激活原理:**
+```
+激活码 = MD5(用户唯一ID + 固定私钥).substring(0,8).toUpperCase()
+```
+
+**文件结构:**
+- `dist/activation/activation.js` - 激活逻辑核心
+- `dist/activation/md5.js` - MD5 哈希实现
+- `dist/activation/activation.css` - 激活弹窗样式
+- `tools/activation-generator.html` - 激活码生成器（开发者工具）
+
+**首次使用流程:**
+1. 用户首次按 Alt+W → 显示激活弹窗
+2. 用户复制自己的用户 ID
+3. 联系开发者支付并获取激活码
+4. 输入激活码完成激活
+
+**未激活状态:**
+- 可以正常浏览当前章节内容
+- 点击"下一章"功能时提示激活
+
 ## 开发命令
 
 ### 安装扩展（Edge/Chrome）
