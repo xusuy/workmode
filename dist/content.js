@@ -26,6 +26,15 @@
   }, true);
 
   async function toggleWorkMode() {
+    // 首次使用检查
+    const isFirstTime = await WorkModeActivation.isFirstLaunch();
+    if (isFirstTime) {
+      await WorkModeActivation.markFirstLaunchShown();
+      WorkModeActivation.showActivationDialog(true);
+      // 弹窗关闭后不自动启动 WorkMode，等待用户再次按 Alt+W
+      return;
+    }
+
     if (isActive) {
       removeOverlay();
       if (document.fullscreenElement) {
