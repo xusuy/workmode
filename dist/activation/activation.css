@@ -1,0 +1,269 @@
+/* dist/activation/activation.css - 激活系统样式 */
+
+/* 激活弹窗遮罩层 */
+.activation-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2147483649;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 激活对话框 */
+.activation-dialog {
+  background: #fff;
+  width: 420px;
+  max-width: 90vw;
+  border-radius: 12px;
+  padding: 32px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.activation-dialog h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #1a1a1a;
+}
+
+.activation-dialog p {
+  margin: 0 0 24px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 用户 ID 区域 */
+.user-id-section {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.user-id-section label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.user-id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-id-row code {
+  flex: 1;
+  background: #fff;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 14px;
+  color: #333;
+  word-break: break-all;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: #0078d4;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: #106ebe;
+}
+
+.user-id-section small {
+  display: block;
+  margin-top: 8px;
+  color: #999;
+  font-size: 11px;
+}
+
+/* 输入区域 */
+.input-section {
+  margin-bottom: 20px;
+}
+
+.input-section label {
+  display: block;
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.input-section input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.input-section input:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+.input-section input.error {
+  border-color: #d13438;
+}
+
+.error-msg {
+  display: block;
+  margin-top: 8px;
+  color: #d13438;
+  font-size: 12px;
+  min-height: 16px;
+}
+
+/* 支付信息区域 */
+.payment-info {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.payment-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.payment-item {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.payment-item strong {
+  color: #0078d4;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 15px;
+}
+
+.payment-price {
+  margin: 12px 0;
+  font-size: 16px;
+  color: #d13438;
+  font-weight: bold;
+}
+
+.payment-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.payment-info .icon {
+  margin-right: 4px;
+}
+
+/* 按钮组 */
+.button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.button-group button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: #f3f3f3;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background: #e8e8e8;
+}
+
+.btn-primary {
+  background: #0078d4;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #106ebe;
+}
+
+.btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Toast 提示 */
+.wps-toast {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 2147483650;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.wps-toast-hiding {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

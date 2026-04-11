@@ -194,3 +194,22 @@
   opacity: 0.5;
   cursor: wait;
 }
+
+/* 用户 ID 显示 */
+#wps-user-id {
+  position: absolute;
+  right: 140px;
+  top: 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+#wps-user-id:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}

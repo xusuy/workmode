@@ -86,6 +86,28 @@
     toolbar.appendChild(logo);
     toolbar.appendChild(menu);
 
+    // 添加用户 ID 显示
+    const userIdDisplay = document.createElement('div');
+    userIdDisplay.id = 'wps-user-id';
+    userIdDisplay.title = '点击复制用户 ID';
+
+    const userId = await WorkModeActivation.getUserId();
+    const shortId = userId.substring(0, 8) + '...';
+    userIdDisplay.textContent = `ID: ${shortId}`;
+
+    // 点击：普通点击复制，Shift+点击重置激活状态
+    userIdDisplay.addEventListener('click', (e) => {
+      if (e.shiftKey) {
+        // Shift+点击：重置激活状态（开发者调试功能）
+        resetActivationState();
+      } else {
+        // 普通点击：复制用户 ID
+        WorkModeActivation.copyUserId();
+      }
+    });
+
+    toolbar.appendChild(userIdDisplay);
+
     const docTitle = document.createElement('div');
     docTitle.id = 'wps-doc-title';
     docTitle.textContent = '[兼容模式] 文档1.docx';
@@ -602,14 +624,28 @@
 
       content.appendChild(cloned);
     });
-
-    setTimeout(() => {
-      separator.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
   }
 
   // 加载下一章 - 支持 SPA 和 MPA 两种模式
   async function loadNextChapter() {
+    // 检查激活状态
+    if (!await WorkModeActivation.isActivated()) {
+      // 退出全屏，否则用户看不到激活弹窗
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(err => {});
+      }
+
+      // 显示激活弹窗，传入成功回调
+      WorkModeActivation.showActivationDialog(false, async () => {
+        // 激活成功后的回调：进入全屏并自动加载下一章
+        // 进入全屏（WorkMode 的正常使用状态）
+        document.documentElement.requestFullscreen().catch(err => {});
+        // 重新调用 loadNextChapter，这次会跳过激活检查直接加载
+        await loadNextChapter();
+      });
+      return;
+    }
+
     if (chapterState.isLoading) return;
 
     const config = window.WorkModeConfigLoader?.getConfig();
@@ -1108,6 +1144,32 @@
     }
 
     chapterState.isLoading = false;
+  }
+
+  // 重置激活状态（开发者调试功能）
+  async function resetActivationState() {
+    if (confirm('确定要重置激活状态吗？\n\n重置后需要重新输入激活码才能使用"下一章"功能。')) {
+      try {
+        await chrome.storage.local.remove(['isActivated', 'activationCode']);
+        console.log('[WorkMode] 激活状态已重置');
+
+        // 更新工具栏用户 ID 显示提示已重置
+        const userIdDisplay = document.getElementById('wps-user-id');
+        if (userIdDisplay) {
+          const userId = await WorkModeActivation.getUserId();
+          const shortId = userId.substring(0, 8) + '...';
+          userIdDisplay.textContent = `ID: ${shortId} (已重置)`;
+          setTimeout(() => {
+            userIdDisplay.textContent = `ID: ${shortId}`;
+          }, 2000);
+        }
+
+        showToast('激活状态已重置');
+      } catch (error) {
+        console.error('[WorkMode] 重置激活状态失败:', error);
+        showToast('重置失败：' + error.message);
+      }
+    }
   }
 
 })();
