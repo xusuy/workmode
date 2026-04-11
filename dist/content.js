@@ -95,9 +95,15 @@
     const shortId = userId.substring(0, 8) + '...';
     userIdDisplay.textContent = `ID: ${shortId}`;
 
-    // 点击复制
-    userIdDisplay.addEventListener('click', () => {
-      WorkModeActivation.copyUserId();
+    // 点击：普通点击复制，Shift+点击重置激活状态
+    userIdDisplay.addEventListener('click', (e) => {
+      if (e.shiftKey) {
+        // Shift+点击：重置激活状态（开发者调试功能）
+        resetActivationState();
+      } else {
+        // 普通点击：复制用户 ID
+        WorkModeActivation.copyUserId();
+      }
     });
 
     toolbar.appendChild(userIdDisplay);
@@ -1146,6 +1152,32 @@
     }
 
     chapterState.isLoading = false;
+  }
+
+  // 重置激活状态（开发者调试功能）
+  async function resetActivationState() {
+    if (confirm('确定要重置激活状态吗？\n\n重置后需要重新输入激活码才能使用"下一章"功能。')) {
+      try {
+        await chrome.storage.local.remove(['isActivated', 'activationCode']);
+        console.log('[WorkMode] 激活状态已重置');
+
+        // 更新工具栏用户 ID 显示提示已重置
+        const userIdDisplay = document.getElementById('wps-user-id');
+        if (userIdDisplay) {
+          const userId = await WorkModeActivation.getUserId();
+          const shortId = userId.substring(0, 8) + '...';
+          userIdDisplay.textContent = `ID: ${shortId} (已重置)`;
+          setTimeout(() => {
+            userIdDisplay.textContent = `ID: ${shortId}`;
+          }, 2000);
+        }
+
+        showToast('激活状态已重置');
+      } catch (error) {
+        console.error('[WorkMode] 重置激活状态失败:', error);
+        showToast('重置失败：' + error.message);
+      }
+    }
   }
 
 })();
