@@ -136,6 +136,27 @@
       background: #10b981;
     }
 
+    .button-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .continue-btn {
+      padding: 10px 24px;
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .continue-btn:hover {
+      background: #e5e7eb;
+    }
+
     .info {
       margin-top: 24px;
       padding: 16px;
@@ -176,7 +197,10 @@
     <div class="result" id="result">
       <div class="result-label">激活码:</div>
       <div class="code-display" id="code">--------</div>
-      <button class="copy-btn" id="copyBtn" onclick="copyCode()">复制</button>
+      <div class="button-row">
+        <button class="copy-btn" id="copyBtn" onclick="copyCode()">复制</button>
+        <button class="continue-btn" id="continueBtn" onclick="continueGenerate()">继续生成激活码</button>
+      </div>
     </div>
 
     <div class="info">
@@ -243,6 +267,15 @@
         btn.classList.add('copied');
         btn.textContent = '已复制';
       });
+    }
+
+    function continueGenerate() {
+      // 清空用户ID输入框
+      document.getElementById('userId').value = '';
+      // 隐藏结果区域
+      document.getElementById('result').classList.remove('show');
+      // 聚焦到用户ID输入框
+      document.getElementById('userId').focus();
     }
 
     // 支持回车键生成
