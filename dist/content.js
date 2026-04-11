@@ -628,6 +628,10 @@
   async function loadNextChapter() {
     // 检查激活状态
     if (!await WorkModeActivation.isActivated()) {
+      // 退出全屏，否则用户看不到激活弹窗
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(err => {});
+      }
       WorkModeActivation.showActivationDialog(false);
       return;
     }
