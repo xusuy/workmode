@@ -626,7 +626,7 @@
     });
 
     setTimeout(() => {
-      separator.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      separator.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   }
 
