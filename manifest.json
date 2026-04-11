@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WorkMode",
   "version": "1.1.0",
-  "description": "在公共场合伪装成 WPS 工作的浏览器扩展",
+  "description": "职场文档视力保护器/沉浸式阅读助手",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
