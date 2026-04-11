@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WorkMode",
   "version": "1.2.0",
-  "description": "职场文档视力保护器/沉浸式阅读助手",
+  "description": "职场文档视力保护器/沉浸式阅读助手，按 Alt+W 一键切换沉浸式体验",
   "permissions": ["storage"],
   "content_scripts": [
     {
