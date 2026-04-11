@@ -80,7 +80,7 @@
       return wordToHexValue;
     }
 
-    const x = Array();
+    let x = Array();
     let k, AA, BB, CC, DD, a, b, c, d;
     const S11 = 7, S12 = 12, S13 = 17, S14 = 22;
     const S21 = 5, S22 = 9, S23 = 14, S24 = 20;
