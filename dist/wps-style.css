@@ -16,13 +16,17 @@
 
 /* Top toolbar - WPS blue */
 #wps-toolbar {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   background-color: #2B579A;
   height: 48px;
   display: flex;
   align-items: center;
   padding: 0 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 10;
 }
 
 /* WPS Logo area */
@@ -70,7 +74,9 @@
   width: 210mm;
   height: calc(90vh - 28px) !important; /* 减去状态栏高度 */
   background-color: #FFFFFF;
-  margin: 30px auto;
+  margin-top: 78px; /* 48px 工具栏 + 30px 原顶部边距 */
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 58px; /* 额外底部边距避开状态栏 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   padding: 40px;
