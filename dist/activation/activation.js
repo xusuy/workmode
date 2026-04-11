@@ -114,7 +114,7 @@
     },
 
     // 显示激活弹窗
-    showActivationDialog(isFirstTime = true) {
+    showActivationDialog(isFirstTime = true, onSuccess = null) {
       // 移除已存在的弹窗
       const existing = document.getElementById('activation-modal');
       if (existing) {
@@ -227,9 +227,13 @@
 
           if (success) {
             showToast('激活成功！');
-            setTimeout(() => {
+            setTimeout(async () => {
               modal.remove();
-              // 通知调用方激活成功
+              // 调用成功回调（如果提供）
+              if (onSuccess && typeof onSuccess === 'function') {
+                await onSuccess();
+              }
+              // 通知调用方激活成功（保持向后兼容）
               if (window._onActivationSuccess) {
                 window._onActivationSuccess();
               }

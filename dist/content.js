@@ -628,11 +628,23 @@
   async function loadNextChapter() {
     // 检查激活状态
     if (!await WorkModeActivation.isActivated()) {
+      // 保存全屏状态，激活成功后恢复
+      const wasFullscreen = !!document.fullscreenElement;
+
       // 退出全屏，否则用户看不到激活弹窗
-      if (document.fullscreenElement) {
+      if (wasFullscreen) {
         await document.exitFullscreen().catch(err => {});
       }
-      WorkModeActivation.showActivationDialog(false);
+
+      // 显示激活弹窗，传入成功回调
+      WorkModeActivation.showActivationDialog(false, async () => {
+        // 激活成功后的回调：自动加载下一章并恢复全屏
+        if (wasFullscreen) {
+          document.documentElement.requestFullscreen().catch(err => {});
+        }
+        // 重新调用 loadNextChapter，这次会跳过激活检查直接加载
+        await loadNextChapter();
+      });
       return;
     }
 
