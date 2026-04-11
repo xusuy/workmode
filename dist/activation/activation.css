@@ -9,7 +9,7 @@
   height: 100vh;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
-  z-index: 10000;
+  z-index: 2147483649;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,7 +227,7 @@
   padding: 12px 24px;
   border-radius: 4px;
   font-size: 14px;
-  z-index: 10001;
+  z-index: 2147483650;
   animation: slideInRight 0.3s ease-out;
 }
 
