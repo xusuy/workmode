@@ -624,10 +624,6 @@
 
       content.appendChild(cloned);
     });
-
-    setTimeout(() => {
-      separator.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
   }
 
   // 加载下一章 - 支持 SPA 和 MPA 两种模式
