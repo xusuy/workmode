@@ -77,20 +77,30 @@
 
     // 验证激活码
     async verifyActivation(inputCode) {
-      const userId = await this.getUserId();
-      const correctCode = calculateActivationCode(userId);
+      try {
+        console.log('[WorkMode] 开始验证激活码:', inputCode);
+        const userId = await this.getUserId();
+        console.log('[WorkMode] 用户 ID:', userId);
 
-      if (inputCode.toUpperCase() === correctCode) {
-        await Storage.set({
-          [STORAGE_KEYS.IS_ACTIVATED]: true,
-          [STORAGE_KEYS.ACTIVATION_CODE]: inputCode.toUpperCase()
-        });
-        console.log('[WorkMode] 激活成功');
-        return true;
+        const correctCode = calculateActivationCode(userId);
+        console.log('[WorkMode] 正确的激活码:', correctCode);
+        console.log('[WorkMode] 用户输入:', inputCode.toUpperCase());
+
+        if (inputCode.toUpperCase() === correctCode) {
+          await Storage.set({
+            [STORAGE_KEYS.IS_ACTIVATED]: true,
+            [STORAGE_KEYS.ACTIVATION_CODE]: inputCode.toUpperCase()
+          });
+          console.log('[WorkMode] 激活成功');
+          return true;
+        }
+
+        console.log('[WorkMode] 激活失败：激活码不正确');
+        return false;
+      } catch (error) {
+        console.error('[WorkMode] 激活验证出错:', error);
+        throw error;
       }
-
-      console.log('[WorkMode] 激活失败：激活码不正确');
-      return false;
     },
 
     // 检查是否已显示过首次激活弹窗
@@ -212,19 +222,27 @@
         submitBtn.disabled = true;
         submitBtn.textContent = '验证中...';
 
-        const success = await this.verifyActivation(code);
+        try {
+          const success = await this.verifyActivation(code);
 
-        if (success) {
-          showToast('激活成功！');
-          setTimeout(() => {
-            modal.remove();
-            // 通知调用方激活成功
-            if (window._onActivationSuccess) {
-              window._onActivationSuccess();
-            }
-          }, 500);
-        } else {
-          errorEl.textContent = '激活码不正确，请检查';
+          if (success) {
+            showToast('激活成功！');
+            setTimeout(() => {
+              modal.remove();
+              // 通知调用方激活成功
+              if (window._onActivationSuccess) {
+                window._onActivationSuccess();
+              }
+            }, 500);
+          } else {
+            errorEl.textContent = '激活码不正确，请检查';
+            input.classList.add('error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '激活';
+          }
+        } catch (error) {
+          console.error('[WorkMode] 激活过程出错:', error);
+          errorEl.textContent = '激活失败，请重试';
           input.classList.add('error');
           submitBtn.disabled = false;
           submitBtn.textContent = '激活';
