@@ -63,7 +63,8 @@
 #wps-doc-title {
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   color: white;
   font-size: 14px;
   opacity: 0.9;
